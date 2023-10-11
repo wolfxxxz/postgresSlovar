@@ -32,7 +32,7 @@ func init() {
 		log.Fatal("could not find .env file: ", err)
 	}
 	//conf := repository.NewPostgres()
-	fmt.Println("path", path)
+	fmt.Println("PATH", path)
 	Conf.DBconnect = os.Getenv("path")
 	fmt.Println(Conf.DBconnect)
 

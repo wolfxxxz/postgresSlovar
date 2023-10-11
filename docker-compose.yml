@@ -10,6 +10,7 @@ services:
       - ${HOME}/pgdata/:/var/lib/postgresql/data  # Монтируем директорию для данных PostgreSQL
     environment:
       POSTGRES_PASSWORD: 1 
+    restart: always
 # Устанавливаем переменную окружения для пароля PostgreSQL
 # Добавляем опцию --rm для удаления контейнера при остановке
 # Это означает, что контейнер и связанные с ним данные будут удалены после его остановки
