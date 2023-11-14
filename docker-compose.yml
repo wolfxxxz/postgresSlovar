@@ -3,24 +3,12 @@ version: '3'
 services:
   postgres:
     image: postgres:alpine3.18
-    container_name: postgres-slovar  # Задаем имя контейнера
+    container_name: postgres-slovar  
     ports:
       - 5435:5432  # Пробрасываем порт 5432 контейнера на порт 5432 хоста
     volumes:
-      - ${HOME}/pgdata/:/var/lib/postgresql/data  # Монтируем директорию для данных PostgreSQL
+      - ${HOME}/pgdata/:/var/lib/postgresql/data  
     environment:
       POSTGRES_PASSWORD: 1 
-    restart: always
-# Устанавливаем переменную окружения для пароля PostgreSQL
-# Добавляем опцию --rm для удаления контейнера при остановке
-# Это означает, что контейнер и связанные с ним данные будут удалены после его остановки
-# Если этот контейнер будет перезапущен, данные будут потеряны.
-# Пожалуйста, будьте осторожны при использовании этой опции, чтобы не потерять данные.
-# Когда контейнер работает в фоновом режиме, вы можете использовать команду docker-compose down
-# для безопасного удаления контейнеров, сетей и томов, управляемых docker-compose.
-# Если вы хотите оставить контейнер после его остановки, просто удалите или закомментируйте это поле.
-# Пример: `--rm: false`
-# Документация Docker Compose: https://docs.docker.com/compose/reference/down/
-# Документация Docker: https://docs.docker.com/engine/reference/run/#clean-up---rm
-# Документация Docker Compose (на русском): https://docs.docker.com/compose/reference/rm/
+
        

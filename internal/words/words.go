@@ -18,7 +18,6 @@ func NewLibrary(newId int, newEnglish string, newRussian string, newTheme string
 	return &Word{Id: newId, English: newEnglish, Russian: newRussian, Theme: newTheme}
 }
 
-// Псевдоним типа
 type Slovarick []Word
 
 func NewSlovar(w Word) *Slovarick {

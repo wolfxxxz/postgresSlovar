@@ -16,43 +16,26 @@ var DB = repository.Conf.DB
 
 func WorkTest(s *[]Word) *[]Word {
 	startTime := time.Now()
-
-	//Инициализирую мапу map[rus][]
 	maps, err := GetWordsMap(DB)
 	if err != nil {
 		fmt.Println(err)
 	}
-	//fmt.Println("mapWord init", len(*K))
 
-	//Тут будут слова которые потом нужно учить
 	var LearnSlice []Word
-
-	//fmt.Println("Количество слов для теста")
-	//количество слов для теста и скопировать их с оригинала
 	quantity := len(*s)
-	var capSlovar int = quantity // cap  ёмкость нового []Words
+	var capSlovar int = quantity
 	NewSlovar := make(Slovarick, capSlovar)
-	//NewSlovar := &NewWordsu
 	copy(NewSlovar, (*s)[:quantity])
-
-	//Отрезать этот кусок от оригинала
 	*s = (*s)[quantity:]
-	//Присобачить что то впереди, что то сзади
 	fmt.Println("                     START")
 	var yes int
 	var not int
 	var exit1 bool
 	fmt.Println("range NewSlovar")
 	for _, v := range NewSlovar {
-		/*if v == nil {
-			log.Println("WorkTest err")
-			break
-		}*/
 		if exit1 {
 			not++
-
 			Preppend(s, v)
-			//LearnSlice.Preppend(v)
 			continue
 		}
 
@@ -63,7 +46,6 @@ func WorkTest(s *[]Word) *[]Word {
 		}
 		if y > 0 && n > 0 {
 			yes++
-
 			Preppend(s, v)
 			Preppend(&LearnSlice, v)
 			continue
@@ -73,47 +55,36 @@ func WorkTest(s *[]Word) *[]Word {
 			yes++
 			v.RightAnswer += 1
 			UpdateRightAnswer(DB, &v)
-
 			AppendWord(s, v)
 		} else if n > 0 {
 			not++
 			Preppend(s, v)
 			Preppend(&LearnSlice, v)
-			//
 		} else {
 			break
 		}
 	}
 	duration := time.Since(startTime)
 	PrintTime(duration)
-	//------------------------------------
 	sStat := NewStatistick(quantity, yes, not)
 	sStat.WriteStatistic("statistic.txt")
-	//------------------------------------
 	fmt.Println(yes, not)
 	return &LearnSlice
 }
 
-// Учить слова которые в тесте не смог выучить
 func LearnWords(s []Word) bool {
-
 	maps, err := GetWordsMap(DB)
 	if err != nil {
 		fmt.Println(err)
 	}
-	// Измерить время выполнения
-	startTime := time.Now()
 
+	startTime := time.Now()
 	fmt.Println("                 Learn Words")
-	//K := s.CreateAndInitMapWords()
 	for {
 		if len(s) == 0 {
 			break
 		}
 		v := s[0]
-		/*if v == nil {
-			break
-		}*/
 		y, _, exit := Compare(v, maps)
 		if exit {
 			break
@@ -148,7 +119,6 @@ func ScanInt() (n int) {
 	return
 }
 
-// Сравнение строк / пробелы между словами "_"
 func Compare(l Word, mapWord *map[string][]string) (yes int, not int, exit bool) {
 	fmt.Println(l.Russian, " ||Тема: ", l.Theme)
 	c := IgnorSpace(l.English)
@@ -156,11 +126,10 @@ func Compare(l Word, mapWord *map[string][]string) (yes int, not int, exit bool)
 	a, _ := ScanStringOne()
 	if a == "exit" {
 		exit = true
-		//yes = 1
 		return yes, not, exit
 	}
-	s := IgnorSpace(a)
 
+	s := IgnorSpace(a)
 	if strings.EqualFold(c, s) {
 		yes++
 		fmt.Println("Yes")
@@ -172,7 +141,6 @@ func Compare(l Word, mapWord *map[string][]string) (yes int, not int, exit bool)
 		} else if n == 1 || exit {
 			not++
 		}
-
 	} else if compareStringsLevenshtein(c, s) {
 		yes++
 		fmt.Println("Не совсем правильно ", l.English)
@@ -194,9 +162,7 @@ func Compare(l Word, mapWord *map[string][]string) (yes int, not int, exit bool)
 func compareStringsLevenshtein(str1, str2 string) bool {
 	str1 = strings.ToLower(str1)
 	str2 = strings.ToLower(str2)
-	//number of allowed errors
 	mistakes := 1
-
 	if distance := levenshtein.ComputeDistance(str1, str2); distance <= mistakes {
 		return true
 	} else {
@@ -213,7 +179,6 @@ func IgnorSpace(s string) (c string) {
 	return
 }
 
-// Сравнение Мапы со слайсом значений
 func CompareWithMap(russian, answer string, mapWords *map[string][]string) bool {
 	englishWords, ok := (*mapWords)[russian]
 	if !ok {
@@ -222,12 +187,11 @@ func CompareWithMap(russian, answer string, mapWords *map[string][]string) bool 
 
 	for _, word := range englishWords {
 		if answer == word {
-			return true // Найдено совпадение
+			return true
 		}
-
 	}
 
-	return false // Не найдено совпадение
+	return false
 }
 
 func ScanTime(a *string) {
@@ -236,6 +200,24 @@ func ScanTime(a *string) {
 	if in.Scan() {
 		*a = in.Text()
 	}
+}
+
+func PrintXpen(s string) {
+	var d int
+	for i := 0; i <= 15; i++ {
+
+		d++
+		for i := 0; i <= d; i++ {
+			fmt.Print(" ")
+		}
+		fmt.Println(s, "   ", s, "   ", s)
+	}
+}
+
+func PrintTime(duration time.Duration) {
+	minutes := int(duration.Minutes())
+	seconds := int(duration.Seconds()) % 60
+	fmt.Printf("Time: %d minutes %d seconds\n", minutes, seconds)
 }
 
 /*
@@ -270,21 +252,3 @@ func CompareTime(l Word) (yes int, not int) {
 	return yes, not
 
 }*/
-
-func PrintXpen(s string) {
-	var d int
-	for i := 0; i <= 15; i++ {
-
-		d++
-		for i := 0; i <= d; i++ {
-			fmt.Print(" ")
-		}
-		fmt.Println(s, "   ", s, "   ", s)
-	}
-}
-
-func PrintTime(duration time.Duration) {
-	minutes := int(duration.Minutes())
-	seconds := int(duration.Seconds()) % 60
-	fmt.Printf("Time: %d minutes %d seconds\n", minutes, seconds)
-}

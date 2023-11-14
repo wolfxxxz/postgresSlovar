@@ -8,13 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// StartCompetition(db *sqlx.DB, id int) error {
 func StartCompetition(db *sqlx.DB) error {
-	/*user, err := users.GetUserByID(db, id)
-	if err != nil {
-		return err
-	}
-	fmt.Println(user)*/
 	for {
 		fmt.Println("  Update Library_by_txt_new_words: `update`")
 		time.Sleep(20 * time.Millisecond)
@@ -22,8 +16,6 @@ func StartCompetition(db *sqlx.DB) error {
 		time.Sleep(20 * time.Millisecond)
 		fmt.Println("      Learn Words: `learn`")
 		time.Sleep(20 * time.Millisecond)
-		//fmt.Println("      Upload all from .json: `upload_json`")
-		//time.Sleep(20 * time.Millisecond)
 		fmt.Println("      Update by json: `update_json`")
 		time.Sleep(20 * time.Millisecond)
 		fmt.Println("      Download all words: `download`")
@@ -38,55 +30,48 @@ func StartCompetition(db *sqlx.DB) error {
 			var LibraryOldWords []Word
 			DecodeJsonSliceWord(&LibraryOldWords, "save/library.json")
 			fmt.Println(len(LibraryOldWords))
-
 			var LibraryWords []Word
 			DecodeTXT(&LibraryWords, "save/newWords.txt")
 			SaveEmptyTXT("save/newWords.txt", "You need to add your words here")
 			fmt.Println(LibraryWords)
-
 			err := InsertWords(db, &LibraryWords)
 			if err != nil {
 				fmt.Println("main ", err)
 			}
+
 			UpdateLibrary(&LibraryWords, &LibraryOldWords)
 			EncodeJson(&LibraryOldWords, "save/library.json")
 		case "test":
 			var quantity int
 			fmt.Println("Количество слов для теста")
 			fmt.Scan(&quantity)
-
 			var LibraryWords []Word
 			GetWordsWhereRA(db, &LibraryWords, quantity)
 			LibraryLearn := WorkTest(&LibraryWords)
 			err := InsertWordsLearn(db, LibraryLearn)
 			if err != nil {
 				log.Println("You need to learn words because there are lots of words accumulated in library")
-				//log.Println(err)
 			}
 
 		case "learn":
 			var quantity int
 			fmt.Println("Количество слов to learn")
 			fmt.Scan(&quantity)
-
 			var Learn []Word
 			GetWordsLearn(db, &Learn, quantity)
-			//fmt.Println(len(Learn))
 			LearnWords(Learn)
 			fmt.Println("After learn :", len(Learn))
-
 			for _, v := range Learn {
 				err := DeleteLearnWordsId(db, v.Id)
 				if err != nil {
 					fmt.Println(err)
 				}
-
 			}
+
 		case "upload_json":
 			var LibraryOldWords []Word
 			DecodeJsonSliceWord(&LibraryOldWords, "save/library.json")
 			fmt.Println(len(LibraryOldWords))
-
 			err := InsertWords(db, &LibraryOldWords)
 			if err != nil {
 				fmt.Println("main ", err)
@@ -103,18 +88,21 @@ func StartCompetition(db *sqlx.DB) error {
 					fmt.Println(err)
 				}
 			}
+
 		case "download":
 			var LibraryOldWords []Word
 			err := GetAllWords(db, &LibraryOldWords)
 			if err != nil {
 				fmt.Println(err)
 			}
+
 			EncodeJson(&LibraryOldWords, "save/library.json")
 		case "map":
 			maps, err := GetWordsMap(db)
 			if err != nil {
 				fmt.Println(err)
 			}
+
 			fmt.Println((*maps)["Большой"])
 		case "exit":
 			fmt.Println("You have to do it, your dream wait")

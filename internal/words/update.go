@@ -2,19 +2,10 @@ package words
 
 import "fmt"
 
-// Соединяем два среза в один
-// Return oldWords
 func UpdateLibrary(NewWords *[]Word, oldWords *[]Word) {
-
 	c := len(*oldWords)
-
-	//--------Соединяем два среза в один--------------
 	*oldWords = append(*NewWords, *oldWords...)
-	//NewWords.Words = append(NewWords.Words, oldWords.Words...)
-
 	d := len(*oldWords)
-	// Записать в filetxt пустой
-
 	if d != c {
 		fmt.Println("                   New Words Add:", d-c)
 	} else {
@@ -26,17 +17,9 @@ func UpdateLibrary(NewWords *[]Word, oldWords *[]Word) {
 }
 
 func (oldWords Slovarick) UpdateLibraryOnlyNewWords(NewWords Slovarick) {
-
 	c := len(oldWords)
-	// Проверить на дубликаты
-
-	//--------Соединяем два среза в один--------------
 	oldWords = append(NewWords, oldWords...)
-	//NewWords.Words = append(NewWords.Words, oldWords.Words...)
-
 	d := len(oldWords)
-	// Записать в filetxt пустой
-
 	if d != c {
 		fmt.Println("                   New Words Add:", d-c)
 	} else {
