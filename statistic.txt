@@ -198,3 +198,5 @@ Words tested: 100 || Right Answer: 56 || Wrong Answer: 44 || Average is: 56.0000
 Words tested: 100 || Right Answer: 56 || Wrong Answer: 44 || Average is: 56.00000000000001% ||11 December 2023 09:12:11
 Words tested: 100 || Right Answer: 57 || Wrong Answer: 43 || Average is: 56.99999999999999% ||11 December 2023 21:11:42
 Words tested: 50 || Right Answer: 32 || Wrong Answer: 18 || Average is: 64% ||12 December 2023 09:44:35
+Words tested: 2 || Right Answer: 0 || Wrong Answer: 2 || Average is: 0% ||12 December 2023 16:04:58
+Words tested: 100 || Right Answer: 59 || Wrong Answer: 41 || Average is: 59% ||12 December 2023 18:17:09

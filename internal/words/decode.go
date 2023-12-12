@@ -7,11 +7,12 @@ import (
 	"io"
 	"log"
 	"os"
+	"postgresTakeWords/internal/domain/models"
 	"strings"
 	"unicode"
 )
 
-func DecodeJsonSliceWord(SliceWord *[]Word, file string) {
+func DecodeJsonSliceWord(SliceWord *[]models.Word, file string) {
 	filejson, err := os.Open(file)
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +27,7 @@ func DecodeJsonSliceWord(SliceWord *[]Word, file string) {
 	json.Unmarshal(data, SliceWord)
 }
 
-func EncodeJson(s *[]Word, file string) {
+func EncodeJson(s *[]models.Word, file string) {
 	byteArr, err := json.MarshalIndent(s, "", "   ")
 	if err != nil {
 		log.Fatal(err)
@@ -38,7 +39,7 @@ func EncodeJson(s *[]Word, file string) {
 	}
 }
 
-func DecodeTXT(s *[]Word, filetxt string) {
+func DecodeTXT(s *[]models.Word, filetxt string) {
 	data, err := os.ReadFile(filetxt)
 	if err != nil {
 		fmt.Println(err)
@@ -68,12 +69,12 @@ func DecodeTXT(s *[]Word, filetxt string) {
 			theme = words[2]
 		}
 
-		word := NewLibrary(id, words[0], words[1], theme)
+		word := models.NewLibrary(id, words[0], words[1], theme)
 		*s = append(*s, *word)
 	}
 }
 
-func (s Slovarick) EncodeTXT(files string) {
+func EncodeTXT(files string, s models.Slovarick) {
 	file, err := os.Create(files)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
@@ -105,7 +106,7 @@ func SaveEmptyTXT(files string, txt string) {
 	file.WriteString(txt)
 }
 
-func (s Slovarick) SaveForLearningTxt(files string) {
+func SaveForLearningTxt(files string, s models.Slovarick) {
 	file, err := os.Create(files)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
@@ -145,7 +146,7 @@ func ScanStringOne() (string, error) {
 	return "", nil
 }
 
-func (l Slovarick) Print() {
+func Print(l models.Slovarick) {
 	for _, v := range l {
 		fmt.Print(v.English, " - ", v.Russian, " - ", v.Theme)
 		fmt.Println()

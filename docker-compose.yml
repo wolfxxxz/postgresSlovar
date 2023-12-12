@@ -5,7 +5,7 @@ services:
     image: postgres:alpine3.18
     container_name: postgres-slovar  
     ports:
-      - 5435:5432  # Пробрасываем порт 5432 контейнера на порт 5432 хоста
+      - 5435:5432  
     volumes:
       - ${HOME}/pgdata/:/var/lib/postgresql/data  
     environment:

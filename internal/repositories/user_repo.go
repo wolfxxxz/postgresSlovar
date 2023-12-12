@@ -1,30 +1,36 @@
-package users
+package repositories
 
-import "github.com/jmoiron/sqlx"
+import (
+	"postgresTakeWords/internal/domain/models"
 
-func InsertUser(db *sqlx.DB, user *User) error {
+	"github.com/jmoiron/sqlx"
+)
+
+func InsertUser(db *sqlx.DB, user *models.User) error {
 	err := db.QueryRow("insert into users (name, email, password) values ($1, $2, $3) returning id",
 		user.Name, user.Email, user.Password).Scan(&user.Id)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func GetUserByName(db *sqlx.DB, name string) (*User, error) {
-	u := User{}
+func GetUserByName(db *sqlx.DB, name string) (*models.User, error) {
+	u := models.User{}
 	err := db.Get(&u, "SELECT * FROM users WHERE name=$1", name)
 	if err != nil {
-		return &User{}, err
+		return &models.User{}, err
 	}
 	return &u, nil
 }
 
-func GetUserByID(db *sqlx.DB, userID int) (*User, error) {
-	u := User{}
+func GetUserByID(db *sqlx.DB, userID int) (*models.User, error) {
+	u := models.User{}
 	err := db.Get(&u, "SELECT * FROM users WHERE id=$1", userID)
 	if err != nil {
-		return &User{}, err
+		return &models.User{}, err
 	}
+
 	return &u, nil
 }

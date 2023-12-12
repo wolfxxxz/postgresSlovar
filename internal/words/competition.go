@@ -4,27 +4,28 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"postgresTakeWords/pkg/repository"
+	"postgresTakeWords/internal/domain/models"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/agnivade/levenshtein"
+	"github.com/jmoiron/sqlx"
 )
 
-var DB = repository.Conf.DB
+//var DB = repository.Conf.DB
 
-func WorkTest(s *[]Word) *[]Word {
+func WorkTest(s *[]models.Word, psqlDB *sqlx.DB) *[]models.Word {
 	startTime := time.Now()
-	maps, err := GetWordsMap(DB)
+	maps, err := GetWordsMap(psqlDB)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	var LearnSlice []Word
+	var LearnSlice []models.Word
 	quantity := len(*s)
 	var capSlovar int = quantity
-	NewSlovar := make(Slovarick, capSlovar)
+	NewSlovar := make(models.Slovarick, capSlovar)
 	copy(NewSlovar, (*s)[:quantity])
 	*s = (*s)[quantity:]
 	fmt.Println("                     START")
@@ -35,7 +36,7 @@ func WorkTest(s *[]Word) *[]Word {
 	for _, v := range NewSlovar {
 		if exit1 {
 			not++
-			Preppend(s, v)
+			models.Preppend(s, v)
 			continue
 		}
 
@@ -46,20 +47,20 @@ func WorkTest(s *[]Word) *[]Word {
 		}
 		if y > 0 && n > 0 {
 			yes++
-			Preppend(s, v)
-			Preppend(&LearnSlice, v)
+			models.Preppend(s, v)
+			models.Preppend(&LearnSlice, v)
 			continue
 		}
 
 		if y > 0 {
 			yes++
 			v.RightAnswer += 1
-			UpdateRightAnswer(DB, &v)
-			AppendWord(s, v)
+			UpdateRightAnswer(psqlDB, &v)
+			models.AppendWord(s, v)
 		} else if n > 0 {
 			not++
-			Preppend(s, v)
-			Preppend(&LearnSlice, v)
+			models.Preppend(s, v)
+			models.Preppend(&LearnSlice, v)
 		} else {
 			break
 		}
@@ -72,8 +73,8 @@ func WorkTest(s *[]Word) *[]Word {
 	return &LearnSlice
 }
 
-func LearnWords(s []Word) bool {
-	maps, err := GetWordsMap(DB)
+func LearnWords(s []models.Word, psqlDB *sqlx.DB) bool {
+	maps, err := GetWordsMap(psqlDB)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -119,7 +120,7 @@ func ScanInt() (n int) {
 	return
 }
 
-func Compare(l Word, mapWord *map[string][]string) (yes int, not int, exit bool) {
+func Compare(l models.Word, mapWord *map[string][]string) (yes int, not int, exit bool) {
 	fmt.Println(l.Russian, " ||Тема: ", l.Theme)
 	c := IgnorSpace(l.English)
 
