@@ -9,15 +9,15 @@ import (
 
 func (c *Competition) StartCompetition() error {
 	for {
-		fmt.Println("  Update Library_by_txt_new_words: `update`")
+		fmt.Println("      Update Library_by_txt_new_words: `update`")
 		time.Sleep(20 * time.Millisecond)
-		fmt.Println("    Test knowlige: `test`")
+		fmt.Println("      Test knowlige: `test`")
 		time.Sleep(20 * time.Millisecond)
 		fmt.Println("      Learn Words: `learn`")
 		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Update by json: `update_json`")
+		fmt.Println("      Update by json: `sendAllFromBackUp`")
 		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Download all words: `downloadFromDB`")
+		fmt.Println("      Download all words: `backup`")
 		time.Sleep(20 * time.Millisecond)
 		fmt.Println("      Words map: `map`")
 		time.Sleep(20 * time.Millisecond)
@@ -33,7 +33,7 @@ func (c *Competition) StartCompetition() error {
 			}
 
 			c.log.Info(newWords)
-			c.repoUpdateByTXT.SaveEmptyTXT("You need to add your words here")
+			c.repoUpdateByTXT.CleanNewWords("You need to add your words here")
 
 			err = c.InsertWordsIfNotExist(newWords)
 			if err != nil {
@@ -47,7 +47,7 @@ func (c *Competition) StartCompetition() error {
 				return err
 			}
 
-			err = c.repoBackUpCopy.SaveAll(words)
+			err = c.repoBackUpCopy.SaveAllAsJson(words)
 			if err != nil {
 				c.log.Error(err)
 				return err
@@ -103,7 +103,7 @@ func (c *Competition) StartCompetition() error {
 			}
 
 		case "upload_json":
-			oldWords, err := c.repoBackUpCopy.DecodeJsonSliceWord()
+			oldWords, err := c.repoBackUpCopy.GetAllFromBackUp()
 			if err != nil {
 				c.log.Error(err)
 				return err
@@ -117,8 +117,8 @@ func (c *Competition) StartCompetition() error {
 			}
 
 			c.log.Info("All words have been inserted in DB")
-		case "update_json":
-			wordsFromBackUp, err := c.repoBackUpCopy.DecodeJsonSliceWord()
+		case "sendAllFromBackUp":
+			wordsFromBackUp, err := c.repoBackUpCopy.GetAllFromBackUp()
 			if err != nil {
 				c.log.Error(err)
 				return err
@@ -132,7 +132,7 @@ func (c *Competition) StartCompetition() error {
 				}
 			}
 
-		case "downloadFromDB":
+		case "backup":
 			c.log.Info("download All words from db")
 			oldWords, err := c.repoWordsPg.GetAllWords()
 			if err != nil {
@@ -142,7 +142,13 @@ func (c *Competition) StartCompetition() error {
 
 			c.log.Infof("Get All From DB len [%v]", len(*oldWords))
 
-			err = c.repoBackUpCopy.SaveAll(oldWords)
+			err = c.repoBackUpCopy.SaveAllAsJson(oldWords)
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
+
+			err = c.repoBackUpCopy.SaveAllAsTXT(oldWords)
 			if err != nil {
 				c.log.Error(err)
 				return err

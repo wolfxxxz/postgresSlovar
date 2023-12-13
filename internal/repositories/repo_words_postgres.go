@@ -32,15 +32,6 @@ func (rt *RepoWordsPg) GetAllWords() (*[]models.Word, error) {
 	return &words, nil
 }
 
-func (rt *RepoWordsPg) GetWordById(word *models.Word) (*models.Word, error) {
-	var getWord models.Word
-	err := rt.db.Get(&getWord, "SELECT * FROM words WHERE id=$1", word.Id)
-	if err != nil {
-		return nil, err
-	}
-	return &getWord, nil
-}
-
 func (rt *RepoWordsPg) CheckWordByEnglish(word *models.Word) (int, error) {
 	var id int
 	query := "SELECT id FROM words WHERE english=$1"
