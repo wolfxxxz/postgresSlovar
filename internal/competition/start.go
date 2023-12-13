@@ -1,15 +1,13 @@
-package words
+package competition
 
 import (
 	"fmt"
 	"log"
-	"postgresTakeWords/internal/domain/models"
+	"postgresTakeWords/internal/models"
 	"time"
-
-	"github.com/jmoiron/sqlx"
 )
 
-func StartCompetition(db *sqlx.DB) error {
+func (c *Competition) StartCompetition() error {
 	for {
 		fmt.Println("  Update Library_by_txt_new_words: `update`")
 		time.Sleep(20 * time.Millisecond)
@@ -19,7 +17,7 @@ func StartCompetition(db *sqlx.DB) error {
 		time.Sleep(20 * time.Millisecond)
 		fmt.Println("      Update by json: `update_json`")
 		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Download all words: `download`")
+		fmt.Println("      Download all words: `downloadFromDB`")
 		time.Sleep(20 * time.Millisecond)
 		fmt.Println("      Words map: `map`")
 		time.Sleep(20 * time.Millisecond)
@@ -29,27 +27,27 @@ func StartCompetition(db *sqlx.DB) error {
 		switch command {
 		case "update":
 			var LibraryOldWords []models.Word
-			DecodeJsonSliceWord(&LibraryOldWords, "save/library.json")
+			c.repoUpdateByTXT.DecodeJsonSliceWord(&LibraryOldWords)
 			fmt.Println(len(LibraryOldWords))
 			var LibraryWords []models.Word
-			DecodeTXT(&LibraryWords, "save/newWords.txt")
-			SaveEmptyTXT("save/newWords.txt", "You need to add your words here")
-			fmt.Println(LibraryWords)
-			err := InsertWords(db, &LibraryWords)
+			c.repoUpdateByTXT.DecodeTXT(&LibraryWords)
+			c.repoUpdateByTXT.SaveEmptyTXT("You need to add your words here")
+			c.log.Info(LibraryWords)
+			err := c.InsertWords(&LibraryWords)
 			if err != nil {
-				fmt.Println("main ", err)
+				c.log.Errorf("main %v", err)
 			}
 
 			UpdateLibrary(&LibraryWords, &LibraryOldWords)
-			EncodeJson(&LibraryOldWords, "save/library.json")
+			c.repoTXT.EncodeJson(&LibraryOldWords)
 		case "test":
 			var quantity int
 			fmt.Println("Количество слов для теста")
 			fmt.Scan(&quantity)
 			var LibraryWords []models.Word
-			GetWordsWhereRA(db, &LibraryWords, quantity)
-			LibraryLearn := WorkTest(&LibraryWords, db)
-			err := InsertWordsLearn(db, LibraryLearn)
+			c.repoTest.GetWordsWhereRA(&LibraryWords, quantity)
+			LibraryLearn := c.WorkTest(&LibraryWords)
+			err := c.repoLearn.InsertWordsLearn(LibraryLearn)
 			if err != nil {
 				log.Println("You need to learn words because there are lots of words accumulated in library")
 			}
@@ -59,11 +57,11 @@ func StartCompetition(db *sqlx.DB) error {
 			fmt.Println("Количество слов to learn")
 			fmt.Scan(&quantity)
 			var Learn []models.Word
-			GetWordsLearn(db, &Learn, quantity)
-			LearnWords(Learn, db)
+			c.repoLearn.GetWordsLearn(&Learn, quantity)
+			c.LearnWords(Learn)
 			fmt.Println("After learn :", len(Learn))
 			for _, v := range Learn {
-				err := DeleteLearnWordsId(db, v.Id)
+				err := c.repoLearn.DeleteLearnWordsId(v.Id)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -71,35 +69,35 @@ func StartCompetition(db *sqlx.DB) error {
 
 		case "upload_json":
 			var LibraryOldWords []models.Word
-			DecodeJsonSliceWord(&LibraryOldWords, "save/library.json")
+			c.repoTXT.DecodeJsonSliceWord(&LibraryOldWords)
 			fmt.Println(len(LibraryOldWords))
-			err := InsertWords(db, &LibraryOldWords)
+			err := c.InsertWords(&LibraryOldWords)
 			if err != nil {
 				fmt.Println("main ", err)
 			}
 
-			EncodeJson(&LibraryOldWords, "save/library.json")
+			c.repoTXT.EncodeJson(&LibraryOldWords)
 		case "update_json":
 			var LibraryOldWords []models.Word
-			DecodeJsonSliceWord(&LibraryOldWords, "save/library.json")
+			c.repoTXT.DecodeJsonSliceWord(&LibraryOldWords)
 			fmt.Println(len(LibraryOldWords))
 			for _, v := range LibraryOldWords {
-				err := UpdateWord(db, &v)
+				err := c.repoTest.UpdateWord(&v)
 				if err != nil {
 					fmt.Println(err)
 				}
 			}
 
-		case "download":
+		case "downloadFromDB":
 			var LibraryOldWords []models.Word
-			err := GetAllWords(db, &LibraryOldWords)
+			err := c.repoTest.GetAllWords(&LibraryOldWords)
 			if err != nil {
 				fmt.Println(err)
 			}
 
-			EncodeJson(&LibraryOldWords, "save/library.json")
+			c.repoTXT.EncodeJson(&LibraryOldWords)
 		case "map":
-			maps, err := GetWordsMap(db)
+			maps, err := c.repoTest.GetWordsMap()
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -111,4 +109,25 @@ func StartCompetition(db *sqlx.DB) error {
 		}
 	}
 
+}
+
+func (c *Competition) InsertWords(words *[]models.Word) error {
+	for i, v := range *words {
+		id, err := c.repoTest.CheckWordByEnglish(&v)
+		if err != nil {
+			log.Println(err)
+			vCopy := v
+			vCopy.Id = id
+			err = c.repoLearn.InsertWordLearn(&vCopy)
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			err = c.repoTest.InsertWord(&(*words)[i])
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+	return nil
 }

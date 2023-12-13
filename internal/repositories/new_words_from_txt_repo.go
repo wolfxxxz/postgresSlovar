@@ -1,19 +1,25 @@
-package words
+package repositories
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"postgresTakeWords/internal/domain/models"
+	"postgresTakeWords/internal/models"
 	"strings"
-	"unicode"
 )
 
-func DecodeJsonSliceWord(SliceWord *[]models.Word, file string) {
-	filejson, err := os.Open(file)
+type UpdateWordsFromTXTRepo struct {
+	newWordsPath string
+}
+
+func NewUpdateWordsFromTXTRepo(newWordsPath string) *UpdateWordsFromTXTRepo {
+	return &UpdateWordsFromTXTRepo{newWordsPath: newWordsPath}
+}
+
+func (tr *UpdateWordsFromTXTRepo) DecodeJsonSliceWord(SliceWord *[]models.Word) {
+	filejson, err := os.Open(tr.newWordsPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,20 +33,20 @@ func DecodeJsonSliceWord(SliceWord *[]models.Word, file string) {
 	json.Unmarshal(data, SliceWord)
 }
 
-func EncodeJson(s *[]models.Word, file string) {
+func (tr *UpdateWordsFromTXTRepo) EncodeJson(s *[]models.Word) {
 	byteArr, err := json.MarshalIndent(s, "", "   ")
 	if err != nil {
 		log.Fatal(err)
 	}
-	//fmt.Println(string(byteArr))             0664
-	err = os.WriteFile(file, byteArr, 0666) //-rw-rw-rw-
+
+	err = os.WriteFile(tr.newWordsPath, byteArr, 0666) //-rw-rw-rw- 0664
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func DecodeTXT(s *[]models.Word, filetxt string) {
-	data, err := os.ReadFile(filetxt)
+func (tr *UpdateWordsFromTXTRepo) DecodeTXT(s *[]models.Word) {
+	data, err := os.ReadFile(tr.newWordsPath)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -74,8 +80,8 @@ func DecodeTXT(s *[]models.Word, filetxt string) {
 	}
 }
 
-func EncodeTXT(files string, s models.Slovarick) {
-	file, err := os.Create(files)
+func (tr *UpdateWordsFromTXTRepo) EncodeTXT(s models.Slovarick) {
+	file, err := os.Create(tr.newWordsPath)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
 		os.Exit(1)
@@ -95,8 +101,8 @@ func EncodeTXT(files string, s models.Slovarick) {
 	}
 }
 
-func SaveEmptyTXT(files string, txt string) {
-	file, err := os.Create(files)
+func (tr *UpdateWordsFromTXTRepo) SaveEmptyTXT(txt string) {
+	file, err := os.Create(tr.newWordsPath)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
 		os.Exit(1)
@@ -106,8 +112,8 @@ func SaveEmptyTXT(files string, txt string) {
 	file.WriteString(txt)
 }
 
-func SaveForLearningTxt(files string, s models.Slovarick) {
-	file, err := os.Create(files)
+func (tr *UpdateWordsFromTXTRepo) SaveForLearningTxt(s models.Slovarick) {
+	file, err := os.Create(tr.newWordsPath)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
 		os.Exit(1)
@@ -132,6 +138,7 @@ func SaveForLearningTxt(files string, s models.Slovarick) {
 	}
 }
 
+/*
 func ScanStringOne() (string, error) {
 	fmt.Print("       ...")
 	in := bufio.NewScanner(os.Stdin)
@@ -153,8 +160,8 @@ func Print(l models.Slovarick) {
 	}
 }
 
-func capitalizeFirstRune(str string) string {
-	runes := []rune(str)
+func capitalizeFirstRune(line string) string {
+	runes := []rune(line)
 	for i, r := range runes {
 		if i == 0 {
 			runes[i] = unicode.ToUpper(r)
@@ -163,3 +170,4 @@ func capitalizeFirstRune(str string) string {
 
 	return string(runes)
 }
+*/

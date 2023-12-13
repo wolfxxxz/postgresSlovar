@@ -1,8 +1,8 @@
-package words
+package competition
 
 import (
 	"fmt"
-	"postgresTakeWords/internal/domain/models"
+	"postgresTakeWords/internal/models"
 )
 
 func UpdateLibrary(NewWords *[]models.Word, oldWords *[]models.Word) {

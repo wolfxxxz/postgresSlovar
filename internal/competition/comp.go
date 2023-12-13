@@ -1,25 +1,45 @@
-package words
+package competition
 
 import (
 	"bufio"
 	"fmt"
 	"os"
-	"postgresTakeWords/internal/domain/models"
+	"postgresTakeWords/internal/models"
+	"postgresTakeWords/internal/repositories"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/agnivade/levenshtein"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
-//var DB = repository.Conf.DB
+type Competition struct {
+	stat            *repositories.Stat
+	repoLearn       *repositories.RepoLearn
+	repoTest        *repositories.RepoTest
+	repoTXT         *repositories.ReserveTXTRepo
+	repoUpdateByTXT *repositories.UpdateWordsFromTXTRepo
+	log             *logrus.Logger
+}
 
-func WorkTest(s *[]models.Word, psqlDB *sqlx.DB) *[]models.Word {
+func NewCompetition(statPath string, reserveCopyPath string, newWordsPath string, sqlDB *sqlx.DB, log *logrus.Logger) *Competition {
+	return &Competition{
+		stat:            repositories.NewStatRepo(statPath),
+		repoLearn:       repositories.NewRepoLearn(sqlDB),
+		repoTest:        repositories.NewRepoTest(sqlDB),
+		repoTXT:         repositories.NewReserveTXTRepo(reserveCopyPath),
+		repoUpdateByTXT: repositories.NewUpdateWordsFromTXTRepo(newWordsPath),
+		log:             log,
+	}
+}
+
+func (c *Competition) WorkTest(s *[]models.Word) *[]models.Word {
 	startTime := time.Now()
-	maps, err := GetWordsMap(psqlDB)
+	maps, err := c.repoTest.GetWordsMap()
 	if err != nil {
-		fmt.Println(err)
+		c.log.Error(err)
 	}
 
 	var LearnSlice []models.Word
@@ -55,7 +75,7 @@ func WorkTest(s *[]models.Word, psqlDB *sqlx.DB) *[]models.Word {
 		if y > 0 {
 			yes++
 			v.RightAnswer += 1
-			UpdateRightAnswer(psqlDB, &v)
+			c.repoTest.UpdateRightAnswer(&v)
 			models.AppendWord(s, v)
 		} else if n > 0 {
 			not++
@@ -65,18 +85,19 @@ func WorkTest(s *[]models.Word, psqlDB *sqlx.DB) *[]models.Word {
 			break
 		}
 	}
+
 	duration := time.Since(startTime)
 	PrintTime(duration)
-	sStat := NewStatistick(quantity, yes, not)
-	sStat.WriteStatistic("statistic.txt")
+	sStat := models.NewStatistick(quantity, yes, not)
+	c.stat.WriteStatistic(*sStat)
 	fmt.Println(yes, not)
 	return &LearnSlice
 }
 
-func LearnWords(s []models.Word, psqlDB *sqlx.DB) bool {
-	maps, err := GetWordsMap(psqlDB)
+func (c *Competition) LearnWords(s []models.Word) bool {
+	maps, err := c.repoTest.GetWordsMap()
 	if err != nil {
-		fmt.Println(err)
+		c.log.Error(err)
 	}
 
 	startTime := time.Now()
@@ -101,6 +122,7 @@ func LearnWords(s []models.Word, psqlDB *sqlx.DB) bool {
 			break
 		}
 	}
+
 	duration := time.Since(startTime)
 	PrintTime(duration)
 	return true
@@ -117,6 +139,7 @@ func ScanInt() (n int) {
 			break
 		}
 	}
+
 	return
 }
 
@@ -221,35 +244,16 @@ func PrintTime(duration time.Duration) {
 	fmt.Printf("Time: %d minutes %d seconds\n", minutes, seconds)
 }
 
-/*
-// Сравнение строк
-func CompareTime(l Word) (yes int, not int) {
-	fmt.Println(l.Russian, " ||Тема: ", l.Theme)
-	c := ""
-	//Игнорировать пробелы
-	for _, v := range l.English {
-		if v != ' ' {
-			c = c + string(v)
-		}
-	}
-	var a string
-	s := ""
-	//Mistake-----------------------------------------------------------
-	go ScanTime(&a)
-	time.Sleep(10 * time.Second)
-	for _, v := range a {
-		if v != ' ' {
-			s = s + string(v)
-		}
+func ScanStringOne() (string, error) {
+	fmt.Print("       ...")
+	in := bufio.NewScanner(os.Stdin)
+	if in.Scan() {
+		return in.Text(), nil
 	}
 
-	if strings.EqualFold(c, s) {
-		yes++
-		fmt.Println("Yes")
-	} else {
-		not++
-		fmt.Println("Incorect:", l.English)
+	if err := in.Err(); err != nil {
+		return "", err
 	}
-	return yes, not
 
-}*/
+	return "", nil
+}

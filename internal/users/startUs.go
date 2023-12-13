@@ -1,5 +1,6 @@
 package users
 
+/*
 import (
 	"fmt"
 	"postgresTakeWords/internal/repositories"
@@ -27,3 +28,4 @@ func StartUser(db *sqlx.DB, name string) (int, error) {
 	fmt.Println(us)
 	return us.Id, nil
 }
+*/

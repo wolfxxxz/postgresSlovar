@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"postgresTakeWords/internal/apperrors"
+	"postgresTakeWords/internal/competition"
 	"postgresTakeWords/internal/config"
 	"postgresTakeWords/internal/infrastructure/database"
 	"postgresTakeWords/internal/log"
-	"postgresTakeWords/internal/words"
 
 	_ "github.com/lib/pq"
 )
@@ -35,7 +35,9 @@ func main() {
 	}
 
 	fmt.Println("Conf connect")
-	err = words.StartCompetition(psqlDB)
+
+	compet := competition.NewCompetition("statistic.txt", "save/library.txt", "save/newWords.txt", psqlDB, logger)
+	err = compet.StartCompetition()
 	if err != nil {
 		logger.Fatal(err)
 	}

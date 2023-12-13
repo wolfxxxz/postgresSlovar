@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"postgresTakeWords/internal/domain/models"
+	"postgresTakeWords/internal/models"
 
 	"github.com/jmoiron/sqlx"
 )
