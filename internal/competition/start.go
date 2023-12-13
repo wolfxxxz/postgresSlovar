@@ -26,83 +26,135 @@ func (c *Competition) StartCompetition() error {
 		fmt.Scan(&command)
 		switch command {
 		case "update":
-			var LibraryOldWords []models.Word
-			c.repoUpdateByTXT.DecodeJsonSliceWord(&LibraryOldWords)
-			fmt.Println(len(LibraryOldWords))
-			var LibraryWords []models.Word
-			c.repoUpdateByTXT.DecodeTXT(&LibraryWords)
-			c.repoUpdateByTXT.SaveEmptyTXT("You need to add your words here")
-			c.log.Info(LibraryWords)
-			err := c.InsertWords(&LibraryWords)
+			newWords, err := c.repoUpdateByTXT.GetAllFromTXT()
 			if err != nil {
-				c.log.Errorf("main %v", err)
+				c.log.Error(err)
+				return err
 			}
 
-			UpdateLibrary(&LibraryWords, &LibraryOldWords)
-			c.repoTXT.EncodeJson(&LibraryOldWords)
+			c.log.Info(newWords)
+			c.repoUpdateByTXT.SaveEmptyTXT("You need to add your words here")
+
+			err = c.InsertWordsIfNotExist(newWords)
+			if err != nil {
+				c.log.Errorf("main %v", err)
+				return err
+			}
+
+			words, err := c.repoWordsPg.GetAllWords()
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
+
+			err = c.repoBackUpCopy.SaveAll(words)
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
 		case "test":
 			var quantity int
 			fmt.Println("Количество слов для теста")
 			fmt.Scan(&quantity)
-			var LibraryWords []models.Word
-			c.repoTest.GetWordsWhereRA(&LibraryWords, quantity)
-			LibraryLearn := c.WorkTest(&LibraryWords)
-			err := c.repoLearn.InsertWordsLearn(LibraryLearn)
+			testWords, err := c.repoWordsPg.GetWordsWhereRA(quantity)
 			if err != nil {
-				log.Println("You need to learn words because there are lots of words accumulated in library")
+				c.log.Error(err)
+				return err
+			}
+
+			maps, err := c.repoWordsPg.GetWordsMap()
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
+
+			wrongWords, err := c.WorkTest(testWords, maps)
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
+			err = c.repoLearn.InsertWordsLearn(wrongWords)
+			if err != nil {
+				c.log.Error(err)
+				return err
 			}
 
 		case "learn":
 			var quantity int
 			fmt.Println("Количество слов to learn")
 			fmt.Scan(&quantity)
-			var Learn []models.Word
-			c.repoLearn.GetWordsLearn(&Learn, quantity)
-			c.LearnWords(Learn)
-			fmt.Println("After learn :", len(Learn))
-			for _, v := range Learn {
+			wordsLearn, err := c.repoLearn.GetWordsLearn(quantity)
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
+
+			if ok := c.LearnWords(*wordsLearn); !ok {
+				c.log.Info("!ok)")
+			}
+
+			fmt.Println("After learn :", len(*wordsLearn))
+			for _, v := range *wordsLearn {
 				err := c.repoLearn.DeleteLearnWordsId(v.Id)
 				if err != nil {
-					fmt.Println(err)
+					c.log.Error(err)
+					return err
 				}
 			}
 
 		case "upload_json":
-			var LibraryOldWords []models.Word
-			c.repoTXT.DecodeJsonSliceWord(&LibraryOldWords)
-			fmt.Println(len(LibraryOldWords))
-			err := c.InsertWords(&LibraryOldWords)
+			oldWords, err := c.repoBackUpCopy.DecodeJsonSliceWord()
 			if err != nil {
-				fmt.Println("main ", err)
+				c.log.Error(err)
+				return err
 			}
 
-			c.repoTXT.EncodeJson(&LibraryOldWords)
+			fmt.Println(len(*oldWords))
+			err = c.InsertWordsIfNotExist(oldWords)
+			if err != nil {
+				c.log.Errorf("main %v", err)
+				return err
+			}
+
+			c.log.Info("All words have been inserted in DB")
 		case "update_json":
-			var LibraryOldWords []models.Word
-			c.repoTXT.DecodeJsonSliceWord(&LibraryOldWords)
-			fmt.Println(len(LibraryOldWords))
-			for _, v := range LibraryOldWords {
-				err := c.repoTest.UpdateWord(&v)
+			wordsFromBackUp, err := c.repoBackUpCopy.DecodeJsonSliceWord()
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
+
+			for _, v := range *wordsFromBackUp {
+				err := c.repoWordsPg.UpdateWord(&v)
 				if err != nil {
-					fmt.Println(err)
+					c.log.Error(err)
+					return err
 				}
 			}
 
 		case "downloadFromDB":
-			var LibraryOldWords []models.Word
-			err := c.repoTest.GetAllWords(&LibraryOldWords)
+			c.log.Info("download All words from db")
+			oldWords, err := c.repoWordsPg.GetAllWords()
 			if err != nil {
-				fmt.Println(err)
+				c.log.Error(err)
+				return err
 			}
 
-			c.repoTXT.EncodeJson(&LibraryOldWords)
+			c.log.Infof("Get All From DB len [%v]", len(*oldWords))
+
+			err = c.repoBackUpCopy.SaveAll(oldWords)
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
 		case "map":
-			maps, err := c.repoTest.GetWordsMap()
+			maps, err := c.repoWordsPg.GetWordsMap()
 			if err != nil {
-				fmt.Println(err)
+				c.log.Error(err)
+				return err
 			}
 
-			fmt.Println((*maps)["Большой"])
+			c.log.Info((*maps)["Большой"])
 		case "exit":
 			fmt.Println("You have to do it, your dream wait")
 			return nil
@@ -111,23 +163,28 @@ func (c *Competition) StartCompetition() error {
 
 }
 
-func (c *Competition) InsertWords(words *[]models.Word) error {
-	for i, v := range *words {
-		id, err := c.repoTest.CheckWordByEnglish(&v)
+func (c *Competition) InsertWordsIfNotExist(words *[]models.Word) error {
+	for _, word := range *words {
+		id, err := c.repoWordsPg.CheckWordByEnglish(&word)
 		if err != nil {
-			log.Println(err)
-			vCopy := v
+			c.log.Error(err)
+			vCopy := word
 			vCopy.Id = id
 			err = c.repoLearn.InsertWordLearn(&vCopy)
 			if err != nil {
-				log.Println(err)
+				c.log.Error(err)
+				return err
 			}
-		} else {
-			err = c.repoTest.InsertWord(&(*words)[i])
+		}
+
+		if id == 0 {
+			err = c.repoWordsPg.InsertWord(&word)
 			if err != nil {
 				log.Println(err)
+				return err
 			}
 		}
 	}
+
 	return nil
 }

@@ -6,29 +6,33 @@ import (
 	"postgresTakeWords/internal/models"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 var collectionRepoTest = "words"
 
-type RepoTest struct {
+type RepoWordsPg struct {
 	db         *sqlx.DB
 	collection string
+	log        *logrus.Logger
 }
 
-func NewRepoTest(db *sqlx.DB) *RepoTest {
-	return &RepoTest{db: db, collection: collectionRepoTest}
+func NewRepoWordsPg(db *sqlx.DB, log *logrus.Logger) *RepoWordsPg {
+	return &RepoWordsPg{db: db, collection: collectionRepoTest, log: log}
 }
 
-func (rt *RepoTest) GetAllWords(words *[]models.Word) error {
-	err := rt.db.Select(words, "SELECT * FROM words order by theme")
+func (rt *RepoWordsPg) GetAllWords() (*[]models.Word, error) {
+	var words []models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words order by theme")
 	if err != nil {
 		log.Fatal(err)
+		return nil, err
 	}
 
-	return nil
+	return &words, nil
 }
 
-func (rt *RepoTest) GetWordById(word *models.Word) (*models.Word, error) {
+func (rt *RepoWordsPg) GetWordById(word *models.Word) (*models.Word, error) {
 	var getWord models.Word
 	err := rt.db.Get(&getWord, "SELECT * FROM words WHERE id=$1", word.Id)
 	if err != nil {
@@ -37,7 +41,7 @@ func (rt *RepoTest) GetWordById(word *models.Word) (*models.Word, error) {
 	return &getWord, nil
 }
 
-func (rt *RepoTest) CheckWordByEnglish(word *models.Word) (int, error) {
+func (rt *RepoWordsPg) CheckWordByEnglish(word *models.Word) (int, error) {
 	var id int
 	query := "SELECT id FROM words WHERE english=$1"
 	err := rt.db.QueryRow(query, word.English).Scan(&id)
@@ -48,7 +52,7 @@ func (rt *RepoTest) CheckWordByEnglish(word *models.Word) (int, error) {
 	return id, fmt.Errorf("word [%v] is already exist in DB", word.English)
 }
 
-func (rt *RepoTest) InsertWord(word *models.Word) error {
+func (rt *RepoWordsPg) InsertWord(word *models.Word) error {
 	var insertedId int
 	query := "INSERT INTO words (english, russian, theme, right_answer) VALUES ($1, $2, $3, $4) RETURNING id"
 	err := rt.db.QueryRow(query, word.English, word.Russian, word.Theme, word.RightAnswer).Scan(&insertedId)
@@ -61,16 +65,18 @@ func (rt *RepoTest) InsertWord(word *models.Word) error {
 	return nil
 }
 
-func (rt *RepoTest) GetWordsWhereRA(words *[]models.Word, quantity int) error {
-	err := rt.db.Select(words, "SELECT * FROM words order by right_answer limit $1", quantity)
+func (rt *RepoWordsPg) GetWordsWhereRA(quantity int) (*[]models.Word, error) {
+	var words []models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words order by right_answer limit $1", quantity)
 	if err != nil {
 		log.Fatal(err)
+		return nil, err
 	}
 
-	return nil
+	return &words, nil
 }
 
-func (rt *RepoTest) UpdateRightAnswer(word *models.Word) error {
+func (rt *RepoWordsPg) UpdateRightAnswer(word *models.Word) error {
 	res, err := rt.db.Exec("update words set right_answer=$1 where id=$2", word.RightAnswer, word.Id)
 	if err != nil {
 		return err
@@ -84,7 +90,7 @@ func (rt *RepoTest) UpdateRightAnswer(word *models.Word) error {
 	return nil
 }
 
-func (rt *RepoTest) UpdateWord(word *models.Word) error {
+func (rt *RepoWordsPg) UpdateWord(word *models.Word) error {
 	res, err := rt.db.Exec("update words set english=$1, russian=$2, theme=$3 where id=$4",
 		word.English, word.Russian, word.Theme, word.Id)
 	if err != nil {
@@ -99,7 +105,7 @@ func (rt *RepoTest) UpdateWord(word *models.Word) error {
 	return nil
 }
 
-func (rt *RepoTest) GetWordsMap() (*map[string][]string, error) {
+func (rt *RepoWordsPg) GetWordsMap() (*map[string][]string, error) {
 	var words models.Slovarick
 	err := rt.db.Select(&words, "SELECT english, russian FROM words order by russian")
 	if err != nil {

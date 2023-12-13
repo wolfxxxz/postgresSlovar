@@ -10,44 +10,60 @@ import (
 	"postgresTakeWords/internal/models"
 	"strings"
 	"unicode"
+
+	"github.com/sirupsen/logrus"
 )
 
-type ReserveTXTRepo struct {
-	reserveCopyPath string
+type BackUpCopyRepo struct {
+	reserveCopyPath    string
+	reserveCopyPathTXT string
+	log                *logrus.Logger
 }
 
-func NewReserveTXTRepo(path string) *ReserveTXTRepo {
-	return &ReserveTXTRepo{reserveCopyPath: path}
+func NewBackUpCopyRepo(path string, pathTXT string, log *logrus.Logger) *BackUpCopyRepo {
+	return &BackUpCopyRepo{reserveCopyPath: path, reserveCopyPathTXT: pathTXT, log: log}
 }
 
-func (tr *ReserveTXTRepo) DecodeJsonSliceWord(SliceWord *[]models.Word) {
+func (tr *BackUpCopyRepo) DecodeJsonSliceWord() (*[]models.Word, error) {
 	filejson, err := os.Open(tr.reserveCopyPath)
 	if err != nil {
 		log.Fatal(err)
+		return nil, err
 	}
 
 	defer filejson.Close()
 	data, err := io.ReadAll(filejson)
 	if err != nil {
 		log.Fatal(err)
+		return nil, err
 	}
 
-	json.Unmarshal(data, SliceWord)
+	var words []models.Word
+	err = json.Unmarshal(data, &words)
+	if err != nil {
+		return nil, err
+	}
+
+	return &words, nil
 }
 
-func (tr *ReserveTXTRepo) EncodeJson(s *[]models.Word) {
+func (tr *BackUpCopyRepo) SaveAll(s *[]models.Word) error {
 	byteArr, err := json.MarshalIndent(s, "", "   ")
 	if err != nil {
 		log.Fatal(err)
+		return err
 	}
 
 	err = os.WriteFile(tr.reserveCopyPath, byteArr, 0666) //-rw-rw-rw- 0664
 	if err != nil {
 		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
-func (tr *ReserveTXTRepo) DecodeTXT(s *[]models.Word) {
+func (tr *BackUpCopyRepo) DecodeTXT(s *[]models.Word) {
 	data, err := os.ReadFile(tr.reserveCopyPath)
 	if err != nil {
 		fmt.Println(err)
@@ -82,8 +98,8 @@ func (tr *ReserveTXTRepo) DecodeTXT(s *[]models.Word) {
 	}
 }
 
-func (tr *ReserveTXTRepo) EncodeTXT(s models.Slovarick) {
-	file, err := os.Create(tr.reserveCopyPath)
+func (tr *BackUpCopyRepo) EncodeTXT(s models.Slovarick) {
+	file, err := os.Create(tr.reserveCopyPathTXT)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
 		os.Exit(1)
@@ -103,7 +119,7 @@ func (tr *ReserveTXTRepo) EncodeTXT(s models.Slovarick) {
 	}
 }
 
-func (tr *ReserveTXTRepo) SaveEmptyTXT(txt string) {
+func (tr *BackUpCopyRepo) SaveEmptyTXT(txt string) {
 	file, err := os.Create(tr.reserveCopyPath)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)
@@ -114,7 +130,7 @@ func (tr *ReserveTXTRepo) SaveEmptyTXT(txt string) {
 	file.WriteString(txt)
 }
 
-func (tr *ReserveTXTRepo) SaveForLearningTxt(s models.Slovarick) {
+func (tr *BackUpCopyRepo) SaveForLearningTxt(s models.Slovarick) {
 	file, err := os.Create(tr.reserveCopyPath)
 	if err != nil {
 		fmt.Println("Unable to create file:", err)

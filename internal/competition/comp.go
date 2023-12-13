@@ -18,30 +18,25 @@ import (
 type Competition struct {
 	stat            *repositories.Stat
 	repoLearn       *repositories.RepoLearn
-	repoTest        *repositories.RepoTest
-	repoTXT         *repositories.ReserveTXTRepo
+	repoWordsPg     *repositories.RepoWordsPg
+	repoBackUpCopy  *repositories.BackUpCopyRepo
 	repoUpdateByTXT *repositories.UpdateWordsFromTXTRepo
 	log             *logrus.Logger
 }
 
-func NewCompetition(statPath string, reserveCopyPath string, newWordsPath string, sqlDB *sqlx.DB, log *logrus.Logger) *Competition {
+func NewCompetition(statPath string, reserveCopyPath string, reserveCopyPathTXT string, newWordsPath string, sqlDB *sqlx.DB, log *logrus.Logger) *Competition {
 	return &Competition{
 		stat:            repositories.NewStatRepo(statPath),
-		repoLearn:       repositories.NewRepoLearn(sqlDB),
-		repoTest:        repositories.NewRepoTest(sqlDB),
-		repoTXT:         repositories.NewReserveTXTRepo(reserveCopyPath),
-		repoUpdateByTXT: repositories.NewUpdateWordsFromTXTRepo(newWordsPath),
+		repoLearn:       repositories.NewRepoLearn(sqlDB, log),
+		repoWordsPg:     repositories.NewRepoWordsPg(sqlDB, log),
+		repoBackUpCopy:  repositories.NewBackUpCopyRepo(reserveCopyPath, reserveCopyPathTXT, log),
+		repoUpdateByTXT: repositories.NewUpdateWordsFromTXTRepo(newWordsPath, log),
 		log:             log,
 	}
 }
 
-func (c *Competition) WorkTest(s *[]models.Word) *[]models.Word {
+func (c *Competition) WorkTest(s *[]models.Word, maps *map[string][]string) (*[]models.Word, error) {
 	startTime := time.Now()
-	maps, err := c.repoTest.GetWordsMap()
-	if err != nil {
-		c.log.Error(err)
-	}
-
 	var LearnSlice []models.Word
 	quantity := len(*s)
 	var capSlovar int = quantity
@@ -75,7 +70,7 @@ func (c *Competition) WorkTest(s *[]models.Word) *[]models.Word {
 		if y > 0 {
 			yes++
 			v.RightAnswer += 1
-			c.repoTest.UpdateRightAnswer(&v)
+			c.repoWordsPg.UpdateRightAnswer(&v)
 			models.AppendWord(s, v)
 		} else if n > 0 {
 			not++
@@ -91,11 +86,11 @@ func (c *Competition) WorkTest(s *[]models.Word) *[]models.Word {
 	sStat := models.NewStatistick(quantity, yes, not)
 	c.stat.WriteStatistic(*sStat)
 	fmt.Println(yes, not)
-	return &LearnSlice
+	return &LearnSlice, nil
 }
 
 func (c *Competition) LearnWords(s []models.Word) bool {
-	maps, err := c.repoTest.GetWordsMap()
+	maps, err := c.repoWordsPg.GetWordsMap()
 	if err != nil {
 		c.log.Error(err)
 	}

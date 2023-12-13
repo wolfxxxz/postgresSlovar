@@ -8,17 +8,20 @@ import (
 	"os"
 	"postgresTakeWords/internal/models"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type UpdateWordsFromTXTRepo struct {
 	newWordsPath string
+	log          *logrus.Logger
 }
 
-func NewUpdateWordsFromTXTRepo(newWordsPath string) *UpdateWordsFromTXTRepo {
-	return &UpdateWordsFromTXTRepo{newWordsPath: newWordsPath}
+func NewUpdateWordsFromTXTRepo(newWordsPath string, log *logrus.Logger) *UpdateWordsFromTXTRepo {
+	return &UpdateWordsFromTXTRepo{newWordsPath: newWordsPath, log: log}
 }
 
-func (tr *UpdateWordsFromTXTRepo) DecodeJsonSliceWord(SliceWord *[]models.Word) {
+func (tr *UpdateWordsFromTXTRepo) DownloadFromJsonAndDecodeModel() *[]models.Word {
 	filejson, err := os.Open(tr.newWordsPath)
 	if err != nil {
 		log.Fatal(err)
@@ -30,7 +33,9 @@ func (tr *UpdateWordsFromTXTRepo) DecodeJsonSliceWord(SliceWord *[]models.Word) 
 		log.Fatal(err)
 	}
 
-	json.Unmarshal(data, SliceWord)
+	var words []models.Word
+	json.Unmarshal(data, &words)
+	return &words
 }
 
 func (tr *UpdateWordsFromTXTRepo) EncodeJson(s *[]models.Word) {
@@ -45,39 +50,42 @@ func (tr *UpdateWordsFromTXTRepo) EncodeJson(s *[]models.Word) {
 	}
 }
 
-func (tr *UpdateWordsFromTXTRepo) DecodeTXT(s *[]models.Word) {
+func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
 	data, err := os.ReadFile(tr.newWordsPath)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return nil, err
 	}
+
 	content := string(data)
 	lines := strings.Split(content, "\n")
+	var words []models.Word
 	for _, line := range lines {
 		if line == "" {
 			continue
 		}
 
-		words := strings.Split(line, "-")
-		if len(words) <= 0 {
+		lines := strings.Split(line, "-")
+		if len(lines) <= 0 {
 			continue
 		}
 
-		for i, v := range words {
-			words[i] = strings.TrimSpace(v)
-			words[i] = strings.ReplaceAll(words[i], ".", "")
-			words[i] = capitalizeFirstRune(words[i])
+		for i, v := range lines {
+			lines[i] = strings.TrimSpace(v)
+			lines[i] = strings.ReplaceAll(lines[i], ".", "")
+			lines[i] = capitalizeFirstRune(lines[i])
 		}
 
 		id := 0
 		theme := ""
-		if len(words) > 3 {
-			theme = words[2]
+		if len(lines) > 3 {
+			theme = lines[2]
 		}
 
-		word := models.NewLibrary(id, words[0], words[1], theme)
-		*s = append(*s, *word)
+		word := models.NewLibrary(id, lines[0], lines[1], theme)
+		words = append(words, *word)
 	}
+
+	return &words, nil
 }
 
 func (tr *UpdateWordsFromTXTRepo) EncodeTXT(s models.Slovarick) {

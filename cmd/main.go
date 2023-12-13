@@ -12,6 +12,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const (
+	stat     = "statistic.txt"
+	libJson  = "save/library.json"
+	libTxt   = "save/library.txt"
+	newWords = "save/newWords.txt"
+)
+
 func main() {
 	logger, err := log.NewLogAndSetLevel("info")
 	if err != nil {
@@ -36,10 +43,9 @@ func main() {
 
 	fmt.Println("Conf connect")
 
-	compet := competition.NewCompetition("statistic.txt", "save/library.txt", "save/newWords.txt", psqlDB, logger)
+	compet := competition.NewCompetition(stat, libJson, libTxt, newWords, psqlDB, logger)
 	err = compet.StartCompetition()
 	if err != nil {
 		logger.Fatal(err)
 	}
-
 }

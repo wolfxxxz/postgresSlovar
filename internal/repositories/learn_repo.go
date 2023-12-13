@@ -6,6 +6,7 @@ import (
 	"postgresTakeWords/internal/models"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 var collectionRepoLearn = "words_learn"
@@ -13,10 +14,11 @@ var collectionRepoLearn = "words_learn"
 type RepoLearn struct {
 	db         *sqlx.DB
 	collection string
+	log        *logrus.Logger
 }
 
-func NewRepoLearn(db *sqlx.DB) *RepoLearn {
-	return &RepoLearn{db: db, collection: collectionRepoLearn}
+func NewRepoLearn(db *sqlx.DB, log *logrus.Logger) *RepoLearn {
+	return &RepoLearn{db: db, collection: collectionRepoLearn, log: log}
 }
 
 func (rl *RepoLearn) InsertWordLearn(word *models.Word) error {
@@ -46,13 +48,15 @@ func (rl *RepoLearn) InsertWordsLearn(words *[]models.Word) error {
 	return nil
 }
 
-func (rl *RepoLearn) GetWordsLearn(words *[]models.Word, quantity int) error {
-	err := rl.db.Select(words, "SELECT * FROM words_learn limit $1", quantity)
+func (rl *RepoLearn) GetWordsLearn(quantity int) (*[]models.Word, error) {
+	var words []models.Word
+	err := rl.db.Select(&words, "SELECT * FROM words_learn limit $1", quantity)
 	if err != nil {
 		log.Fatal(err)
+		return nil, err
 	}
 
-	return nil
+	return &words, nil
 }
 
 func (rl *RepoLearn) DeleteLearnWordsId(id int) error {
