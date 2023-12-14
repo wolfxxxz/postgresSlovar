@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"postgresTakeWords/internal/apperrors"
 	"postgresTakeWords/internal/competition"
 	"postgresTakeWords/internal/config"
 	"postgresTakeWords/internal/infrastructure/database"
@@ -28,7 +26,7 @@ func main() {
 	conf := config.NewConfig()
 	err = conf.ParseConfig("config/.env", logger)
 	if err != nil {
-		logger.Fatal(apperrors.EnvConfigLoadError.AppendMessage(err))
+		logger.Fatal(err)
 	}
 
 	if err = log.SetLevel(logger, conf.LogLevel); err != nil {
@@ -41,7 +39,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	fmt.Println("Conf connect")
+	logger.Info("Conf connect")
 
 	compet := competition.NewCompetition(stat, libJson, libTxt, newWords, psqlDB, logger)
 	err = compet.StartCompetition()

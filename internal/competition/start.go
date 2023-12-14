@@ -9,151 +9,42 @@ import (
 
 func (c *Competition) StartCompetition() error {
 	for {
-		fmt.Println("      Update Library_by_txt_new_words: `update`")
-		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Test knowlige: `test`")
-		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Learn Words: `learn`")
-		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Update by json: `sendAllFromBackUp`")
-		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Download all words: `backup`")
-		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Words map: `map`")
-		time.Sleep(20 * time.Millisecond)
-		fmt.Println("      Exit: `exit`")
+		printMenu()
 		var command string
 		fmt.Scan(&command)
 		switch command {
-		case "update":
-			newWords, err := c.repoUpdateByTXT.GetAllFromTXT()
-			if err != nil {
-				c.log.Error(err)
+		case update:
+			c.log.Info(update)
+			if err := c.update(); err != nil {
 				return err
 			}
 
-			c.log.Info(newWords)
-			c.repoUpdateByTXT.CleanNewWords("You need to add your words here")
-
-			err = c.InsertWordsIfNotExist(newWords)
-			if err != nil {
-				c.log.Errorf("main %v", err)
+		case test:
+			if err := c.test(); err != nil {
 				return err
 			}
 
-			words, err := c.repoWordsPg.GetAllWords()
-			if err != nil {
-				c.log.Error(err)
+		case learn:
+			if err := c.learn(); err != nil {
 				return err
 			}
 
-			err = c.repoBackUpCopy.SaveAllAsJson(words)
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-		case "test":
-			var quantity int
-			fmt.Println("Количество слов для теста")
-			fmt.Scan(&quantity)
-			testWords, err := c.repoWordsPg.GetWordsWhereRA(quantity)
-			if err != nil {
-				c.log.Error(err)
+		case restore:
+			if err := c.restore(); err != nil {
 				return err
 			}
 
-			maps, err := c.repoWordsPg.GetWordsMap()
-			if err != nil {
-				c.log.Error(err)
+		case updateFromBackUp:
+			if err := c.updateFromBackUp(); err != nil {
 				return err
 			}
 
-			wrongWords, err := c.WorkTest(testWords, maps)
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-			err = c.repoLearn.InsertWordsLearn(wrongWords)
-			if err != nil {
-				c.log.Error(err)
+		case backup:
+			if err := c.backup(); err != nil {
 				return err
 			}
 
-		case "learn":
-			var quantity int
-			fmt.Println("Количество слов to learn")
-			fmt.Scan(&quantity)
-			wordsLearn, err := c.repoLearn.GetWordsLearn(quantity)
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-
-			if ok := c.LearnWords(*wordsLearn); !ok {
-				c.log.Info("!ok)")
-			}
-
-			fmt.Println("After learn :", len(*wordsLearn))
-			for _, v := range *wordsLearn {
-				err := c.repoLearn.DeleteLearnWordsId(v.Id)
-				if err != nil {
-					c.log.Error(err)
-					return err
-				}
-			}
-
-		case "upload_json":
-			oldWords, err := c.repoBackUpCopy.GetAllFromBackUp()
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-
-			fmt.Println(len(*oldWords))
-			err = c.InsertWordsIfNotExist(oldWords)
-			if err != nil {
-				c.log.Errorf("main %v", err)
-				return err
-			}
-
-			c.log.Info("All words have been inserted in DB")
-		case "sendAllFromBackUp":
-			wordsFromBackUp, err := c.repoBackUpCopy.GetAllFromBackUp()
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-
-			for _, v := range *wordsFromBackUp {
-				err := c.repoWordsPg.UpdateWord(&v)
-				if err != nil {
-					c.log.Error(err)
-					return err
-				}
-			}
-
-		case "backup":
-			c.log.Info("download All words from db")
-			oldWords, err := c.repoWordsPg.GetAllWords()
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-
-			c.log.Infof("Get All From DB len [%v]", len(*oldWords))
-
-			err = c.repoBackUpCopy.SaveAllAsJson(oldWords)
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-
-			err = c.repoBackUpCopy.SaveAllAsTXT(oldWords)
-			if err != nil {
-				c.log.Error(err)
-				return err
-			}
-		case "map":
+		case mapWords:
 			maps, err := c.repoWordsPg.GetWordsMap()
 			if err != nil {
 				c.log.Error(err)
@@ -161,12 +52,177 @@ func (c *Competition) StartCompetition() error {
 			}
 
 			c.log.Info((*maps)["Большой"])
-		case "exit":
+		case exit:
 			fmt.Println("You have to do it, your dream wait")
 			return nil
 		}
 	}
 
+}
+
+func (c Competition) backup() error {
+	c.log.Info("download All words from db")
+	oldWords, err := c.repoWordsPg.GetAllWords()
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	err = c.repoBackUpCopy.SaveAllAsJson(oldWords)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	err = c.repoBackUpCopy.SaveAllAsTXT(oldWords)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	c.log.Info("backup has been safe")
+	return nil
+}
+
+func (c Competition) updateFromBackUp() error {
+	wordsFromBackUp, err := c.repoBackUpCopy.GetAllFromBackUp()
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	for _, v := range *wordsFromBackUp {
+		err := c.repoWordsPg.UpdateWord(&v)
+		if err != nil {
+			c.log.Error(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c Competition) restore() error {
+	oldWords, err := c.repoBackUpCopy.GetAllFromBackUp()
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	fmt.Println(len(*oldWords))
+	err = c.InsertWordsIfNotExist(oldWords)
+	if err != nil {
+		c.log.Errorf("main %v", err)
+		return err
+	}
+
+	c.log.Info("All words have been inserted in DB")
+	return nil
+}
+
+func (c Competition) learn() error {
+	var quantity int
+	fmt.Println("Количество слов to learn")
+	fmt.Scan(&quantity)
+	wordsLearn, err := c.repoLearn.GetWordsLearn(quantity)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	if ok := c.LearnWords(*wordsLearn); !ok {
+		c.log.Info("!ok)")
+	}
+
+	fmt.Println("After learn :", len(*wordsLearn))
+	for _, v := range *wordsLearn {
+		err := c.repoLearn.DeleteLearnWordsId(v.Id)
+		if err != nil {
+			c.log.Error(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Competition) test() error {
+	var quantity int
+	fmt.Println("Количество слов для теста")
+	fmt.Scan(&quantity)
+	testWords, err := c.repoWordsPg.GetWordsWhereRA(quantity)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	maps, err := c.repoWordsPg.GetWordsMap()
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	wrongWords, err := c.WorkTest(testWords, maps)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+	err = c.repoLearn.InsertWordsLearn(wrongWords)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *Competition) update() error {
+	newWords, err := c.repoUpdateByTXT.GetAllFromTXT()
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	c.log.Info(newWords)
+	c.repoUpdateByTXT.CleanNewWords("You need to add your words here")
+
+	err = c.InsertWordsIfNotExist(newWords)
+	if err != nil {
+		c.log.Errorf("main %v", err)
+		return err
+	}
+
+	words, err := c.repoWordsPg.GetAllWords()
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	err = c.repoBackUpCopy.SaveAllAsJson(words)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func printMenu() {
+	menu := []string{
+		fmt.Sprintf("      Update library (newWords.txt): [%v]\n", update),
+		fmt.Sprintf("      Test knowlige:   [%v]\n", test),
+		fmt.Sprintf("      Learn words:     [%v]\n", learn),
+		fmt.Sprintf("      Restore by json: [%v]\n", restore),
+		fmt.Sprintf("      Update by json:  [%v]\n", updateFromBackUp),
+		fmt.Sprintf("      Backup:          [%v]\n", backup),
+		fmt.Sprintf("      Init map words:  [%v]\n", mapWords),
+		fmt.Sprintf("          Exit:        [%v]\n", exit),
+	}
+
+	for _, pos := range menu {
+		fmt.Println(pos)
+		time.Sleep(20 * time.Millisecond)
+	}
 }
 
 func (c *Competition) InsertWordsIfNotExist(words *[]models.Word) error {

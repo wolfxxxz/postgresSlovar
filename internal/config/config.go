@@ -40,6 +40,6 @@ func (v *Config) ParseConfig(path string, log *logrus.Logger) error {
 		return apperrors.EnvConfigParseError.AppendMessage(errMsg)
 	}
 
-	log.Info("Config has been parsed, succesfully!!!")
+	log.Info("Config has been parsed")
 	return nil
 }

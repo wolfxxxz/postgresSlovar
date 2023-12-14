@@ -28,6 +28,6 @@ func InitClientPostgress(ctx context.Context, conf *config.Config, log *logrus.L
 		return nil, appErr
 	}
 
-	log.Info("Ping success")
+	log.Info("DB Postgres has been connected, DB.Ping success ")
 	return db, nil
 }

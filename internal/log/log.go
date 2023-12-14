@@ -16,6 +16,7 @@ func NewLogAndSetLevel(logLevel string) (*logrus.Logger, error) {
 	logger.SetLevel(loggerLevel)
 	logger.SetReportCaller(true)
 	logger.SetOutput(os.Stdout)
+	logger.Info("Logger has been configurated")
 	return logger, nil
 }
 
@@ -26,5 +27,6 @@ func SetLevel(log *logrus.Logger, logLevel string) error {
 	}
 
 	log.SetLevel(loggerLevel)
+	log.Info("logger level has been configurated")
 	return nil
 }

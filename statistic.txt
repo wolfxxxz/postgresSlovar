@@ -202,3 +202,6 @@ Words tested: 2 || Right Answer: 0 || Wrong Answer: 2 || Average is: 0% ||12 Dec
 Words tested: 100 || Right Answer: 59 || Wrong Answer: 41 || Average is: 59% ||12 December 2023 18:17:09
 Words tested: 100 || Right Answer: 54 || Wrong Answer: 46 || Average is: 54% ||13 December 2023 08:54:40
 Words tested: 10 || Right Answer: 8 || Wrong Answer: 2 || Average is: 80% ||13 December 2023 15:39:36
+Words tested: 100 || Right Answer: 56 || Wrong Answer: 44 || Average is: 56.00000000000001% ||13 December 2023 18:09:40
+Words tested: 50 || Right Answer: 23 || Wrong Answer: 27 || Average is: 46% ||14 December 2023 09:13:08
+Words tested: 100 || Right Answer: 42 || Wrong Answer: 58 || Average is: 42% ||14 December 2023 17:34:04

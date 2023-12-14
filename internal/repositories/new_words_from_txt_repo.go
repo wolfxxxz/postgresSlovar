@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"postgresTakeWords/internal/models"
 	"strings"
@@ -25,6 +27,12 @@ func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
 	}
 
 	content := string(data)
+	if content == "You need to add your words here" {
+		err := errors.New("you need to add your words here")
+		fmt.Println("You need to add new words in save/newWords.txt")
+		return nil, err
+	}
+
 	lines := strings.Split(content, "\n")
 	var words []models.Word
 	for _, line := range lines {
@@ -49,8 +57,8 @@ func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
 			theme = lines[2]
 		}
 
-		word := models.NewLibrary(id, lines[0], lines[1], theme)
-		words = append(words, *word)
+		word := models.Word{Id: id, English: lines[0], Russian: lines[1], Theme: theme}
+		words = append(words, word)
 	}
 
 	return &words, nil
