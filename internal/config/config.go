@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"postgresTakeWords/internal/apperrors"
 
 	"github.com/caarlos0/env"
@@ -28,15 +27,16 @@ func NewConfig() *Config {
 func (v *Config) ParseConfig(path string, log *logrus.Logger) error {
 	err := godotenv.Load(path)
 	if err != nil {
-		errMsg := fmt.Sprintf(" %s", err.Error())
-		log.Info("gotoenv could not find .env", errMsg)
-		return apperrors.EnvConfigParseError.AppendMessage(errMsg)
+		appErr := apperrors.EnvConfigLoadError.AppendMessage(err)
+		log.Error(appErr)
+		return appErr
 
 	}
 
 	if err := env.Parse(v); err != nil {
-		errMsg := fmt.Sprintf("%+v\n", err)
-		return apperrors.EnvConfigParseError.AppendMessage(errMsg)
+		appErr := apperrors.EnvConfigParseError.AppendMessage(err)
+		log.Error(appErr)
+		return appErr
 	}
 
 	log.Info("Config has been parsed")
