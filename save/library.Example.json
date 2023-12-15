@@ -1,0 +1,23 @@
+[
+    {
+       "id": 1037,
+       "english": "String",
+       "russian": "Нитка, шнурок",
+       "theme": "Noun",
+       "rightAnswer": 3
+    },
+    {
+       "id": 1042,
+       "english": "Opportunity",
+       "russian": "Возможность",
+       "theme": "Noun",
+       "rightAnswer": 3
+    },
+    {
+       "id": 1078,
+       "english": "Boat",
+       "russian": "Лодка",
+       "theme": "Noun",
+       "rightAnswer": 3
+    }
+]
