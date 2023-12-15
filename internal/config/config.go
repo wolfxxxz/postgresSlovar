@@ -10,7 +10,6 @@ import (
 )
 
 type Config struct {
-	Token        string `env:"TOKEN"`
 	LogLevel     string `env:"LOGGER_LEVEL"`
 	SqlHost      string `env:"SQLHost"`
 	SqlPort      string `env:"SQL_PORT"`
