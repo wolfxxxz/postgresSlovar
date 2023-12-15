@@ -2,8 +2,10 @@ package repositories
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"postgresTakeWords/internal/apperrors"
 	"postgresTakeWords/internal/models"
 
 	"github.com/sirupsen/logrus"
@@ -22,22 +24,25 @@ func NewBackUpCopyRepo(path string, pathTXT string, log *logrus.Logger) *BackUpC
 func (tr *BackUpCopyRepo) GetAllFromBackUp() (*[]models.Word, error) {
 	filejson, err := os.Open(tr.reserveCopyPath)
 	if err != nil {
-		tr.log.Error(err)
-		return nil, err
+		appErr := apperrors.GetAllFromBackUpErr.AppendMessage(err)
+		tr.log.Error(appErr)
+		return nil, appErr
 	}
 
 	defer filejson.Close()
 	data, err := io.ReadAll(filejson)
 	if err != nil {
-		tr.log.Error(err)
-		return nil, err
+		appErr := apperrors.GetAllFromBackUpErr.AppendMessage(err)
+		tr.log.Error(appErr)
+		return nil, appErr
 	}
 
 	var words []models.Word
 	err = json.Unmarshal(data, &words)
 	if err != nil {
-		tr.log.Error(err)
-		return nil, err
+		appErr := apperrors.GetAllFromBackUpErr.AppendMessage(err)
+		tr.log.Error(appErr)
+		return nil, appErr
 	}
 
 	return &words, nil
@@ -46,13 +51,15 @@ func (tr *BackUpCopyRepo) GetAllFromBackUp() (*[]models.Word, error) {
 func (tr *BackUpCopyRepo) SaveAllAsJson(s *[]models.Word) error {
 	byteArr, err := json.MarshalIndent(s, "", "   ")
 	if err != nil {
-		tr.log.Error(err)
+		appErr := apperrors.SaveAllAsJsonErr.AppendMessage(err)
+		tr.log.Error(appErr)
 		return err
 	}
 
 	err = os.WriteFile(tr.reserveCopyPath, byteArr, 0666) //-rw-rw-rw- 0664
 	if err != nil {
-		tr.log.Error(err)
+		appErr := apperrors.SaveAllAsJsonErr.AppendMessage(err)
+		tr.log.Error(appErr)
 		return err
 	}
 
@@ -62,7 +69,8 @@ func (tr *BackUpCopyRepo) SaveAllAsJson(s *[]models.Word) error {
 func (tr *BackUpCopyRepo) SaveAllAsTXT(s *[]models.Word) error {
 	file, err := os.Create(tr.reserveCopyPathTXT)
 	if err != nil {
-		tr.log.Error("Unable to create file:", err)
+		appErr := apperrors.SaveAllAsTXTErr.AppendMessage(fmt.Sprintf("Unable to create file: [%v]", err))
+		tr.log.Error(appErr)
 		os.Exit(1)
 		return err
 	}

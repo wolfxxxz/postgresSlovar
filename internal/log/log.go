@@ -2,6 +2,7 @@ package log
 
 import (
 	"os"
+	"postgresTakeWords/internal/apperrors"
 
 	"github.com/sirupsen/logrus"
 )
@@ -10,7 +11,8 @@ func NewLogAndSetLevel(logLevel string) (*logrus.Logger, error) {
 	logger := logrus.New()
 	loggerLevel, err := logrus.ParseLevel(logLevel)
 	if err != nil {
-		return nil, err
+		appErr := apperrors.NewLoggerErr.AppendMessage(err)
+		return nil, appErr
 	}
 
 	logger.SetLevel(loggerLevel)
@@ -23,7 +25,8 @@ func NewLogAndSetLevel(logLevel string) (*logrus.Logger, error) {
 func SetLevel(log *logrus.Logger, logLevel string) error {
 	loggerLevel, err := logrus.ParseLevel(logLevel)
 	if err != nil {
-		return err
+		appErr := apperrors.NewLoggerErr.AppendMessage(err)
+		return appErr
 	}
 
 	log.SetLevel(loggerLevel)

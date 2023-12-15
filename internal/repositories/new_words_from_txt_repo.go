@@ -1,9 +1,9 @@
 package repositories
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"postgresTakeWords/internal/apperrors"
 	"postgresTakeWords/internal/models"
 	"strings"
 	"unicode"
@@ -23,14 +23,17 @@ func NewUpdateWordsFromTXTRepo(newWordsPath string, log *logrus.Logger) *UpdateW
 func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
 	data, err := os.ReadFile(tr.newWordsPath)
 	if err != nil {
-		return nil, err
+		appErr := apperrors.GetAllFromTXTErr.AppendMessage(err)
+		tr.log.Error(appErr)
+		return nil, appErr
 	}
 
 	content := string(data)
 	if content == "You need to add your words here" {
-		err := errors.New("you need to add your words here")
 		fmt.Println("You need to add new words in save/newWords.txt")
-		return nil, err
+		appErr := apperrors.GetAllFromTXTErr.AppendMessage("save/newWords.txt is empty")
+		tr.log.Error(appErr)
+		return nil, appErr
 	}
 
 	lines := strings.Split(content, "\n")
@@ -67,7 +70,8 @@ func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
 func (tr *UpdateWordsFromTXTRepo) CleanNewWords(txt string) error {
 	file, err := os.Create(tr.newWordsPath)
 	if err != nil {
-		tr.log.Error("Unable to create file:", err)
+		appErr := apperrors.CleanNewWordsErr.AppendMessage(err)
+		tr.log.Error(appErr)
 		os.Exit(1)
 		return err
 	}

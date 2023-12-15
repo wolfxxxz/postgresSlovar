@@ -26,7 +26,7 @@ type Competition struct {
 
 func NewCompetition(statPath string, reserveCopyPath string, reserveCopyPathTXT string, newWordsPath string, sqlDB *sqlx.DB, log *logrus.Logger) *Competition {
 	return &Competition{
-		stat:            repositories.NewStatRepo(statPath),
+		stat:            repositories.NewStatRepo(statPath, log),
 		repoLearn:       repositories.NewRepoLearn(sqlDB, log),
 		repoWordsPg:     repositories.NewRepoWordsPg(sqlDB, log),
 		repoBackUpCopy:  repositories.NewBackUpCopyRepo(reserveCopyPath, reserveCopyPathTXT, log),

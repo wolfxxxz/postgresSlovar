@@ -14,55 +14,79 @@ func NewAppError() *AppError {
 var (
 	EnvConfigLoadError = AppError{
 		Message: "Failed to load env file",
-		Code:    EnvInitErr,
+		Code:    EnvInit,
 	}
 	EnvConfigParseError = AppError{
 		Message: "Failed to parse env file",
-		Code:    EnvParseErr,
+		Code:    EnvParse,
 	}
 	InitPostgressErr = AppError{
 		Message: "Failed to InitPostgress",
-		Code:    EnvParseErr,
+		Code:    EnvParse,
 	}
-	BotInitializationError = AppError{
-		Message: "Failed to init new bot",
-		Code:    BotInitErr,
+	NewLoggerErr = AppError{
+		Message: "Failed to NewLog",
+		Code:    Log,
 	}
-	BotSendMessageError = AppError{
-		Message: "Failed to send the message",
-		Code:    BotSendMsgErr,
+	GetAllFromBackUpErr = AppError{
+		Message: "Failed to GetAllFromBackUp",
+		Code:    BackUpRepo,
 	}
-	WeatherClientError = AppError{
-		Message: "Failed send request",
-		Code:    HttpSendRequestErr,
+	SaveAllAsJsonErr = AppError{
+		Message: "Failed to SaveAllAsJson",
+		Code:    BackUpRepo,
 	}
-	BotMapperEncodingErr = AppError{
-		Message: "Failed encoding mapper",
-		Code:    MapperEncodingErr,
+	SaveAllAsTXTErr = AppError{
+		Message: "Failed to SaveAllAsTXT",
+		Code:    BackUpRepo,
 	}
-	MongoDataExistsError = AppError{
-		Message: "Failed send mongoDB",
-		Code:    UserRepoErr,
+	InsertWordLearnErr = AppError{
+		Message: "Failed to InsertWordLearn",
+		Code:    LearnRepo,
 	}
-	MongoSaveUserFailedError = AppError{
-		Message: "Failed save mongoDB",
-		Code:    UserRepoErr,
+	GetWordsLearnErr = AppError{
+		Message: "Failed to GetWordsLearn",
+		Code:    LearnRepo,
 	}
-	MongoGetFailedError = AppError{
-		Message: "Failed Get mongoDB",
-		Code:    UserRepoErr,
+	DeleteLearnWordsIdErr = AppError{
+		Message: "Failed to DeleteLearnWordsId",
+		Code:    LearnRepo,
 	}
-	MongoUpdateModFailedError = AppError{
-		Message: "Failed Update mongoDB",
-		Code:    UserRepoErr,
+	GetAllFromTXTErr = AppError{
+		Message: "Failed to GetAllFromTXT",
+		Code:    NewWordsTXTRepo,
 	}
-	MongoInitFailedError = AppError{
-		Message: "Failed Init mongoDB",
-		Code:    InitMongoErr,
+	CleanNewWordsErr = AppError{
+		Message: "Failed to CleanNewWords",
+		Code:    NewWordsTXTRepo,
 	}
-	MongoDropUserByIDErr = AppError{
-		Message: "Failed Delete user",
-		Code:    UserRepoErr,
+	GetAllWordsErr = AppError{
+		Message: "Failed to CleanNewWords",
+		Code:    RepoWordsPg,
+	}
+	CheckWordByEnglishErr = AppError{
+		Message: "Failed to CheckWordByEnglish",
+		Code:    RepoWordsPg,
+	}
+	InsertWordErr = AppError{
+		Message: "Failed to InsertWord",
+		Code:    RepoWordsPg,
+	}
+	GetWordsWhereRAErr = AppError{
+		Message: "Failed to GetWordsWhereRA",
+		Code:    RepoWordsPg,
+	}
+	UpdateRightAnswerErr = AppError{
+		Message: "Failed to UpdateRightAnswer",
+		Code:    RepoWordsPg,
+	}
+	UpdateWordErr = AppError{
+		Message: "Failed to UpdateWord",
+		Code:    RepoWordsPg,
+	}
+	GetWordsMapErr = AppError{
+		Message: "Failed to GetWordsMap",
+		Code:    RepoWordsPg,
 	}
 )
 
