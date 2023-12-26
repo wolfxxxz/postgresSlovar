@@ -7,6 +7,6 @@ var (
 	restore          = "restore_from_backup_json"
 	updateFromBackUp = "update_from_backup"
 	backup           = "backup"
-	mapWords         = "map"
+	mapWords         = "translator"
 	exit             = "exit"
 )

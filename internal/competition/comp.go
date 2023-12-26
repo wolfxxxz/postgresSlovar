@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/agnivade/levenshtein"
 	"github.com/jmoiron/sqlx"
@@ -139,14 +140,14 @@ func ScanInt() (n int) {
 	return
 }
 
-func Compare(l models.Word, mapWord *map[string][]string) (yes int, not int, exit bool) {
+func Compare(l models.Word, mapWord *map[string][]string) (yes int, not int, trExit bool) {
 	fmt.Println(l.Russian, " ||Тема: ", l.Theme)
 	c := IgnorSpace(l.English)
 
 	a, _ := ScanStringOne()
-	if a == "exit" {
-		exit = true
-		return yes, not, exit
+	if a == exit {
+		trExit = true
+		return yes, not, trExit
 	}
 
 	s := IgnorSpace(a)
@@ -253,4 +254,15 @@ func ScanStringOne() (string, error) {
 	}
 
 	return "", nil
+}
+
+func capitalizeFirstRune(line string) string {
+	runes := []rune(line)
+	for i, r := range runes {
+		if i == 0 {
+			runes[i] = unicode.ToUpper(r)
+		}
+	}
+
+	return string(runes)
 }

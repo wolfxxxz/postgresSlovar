@@ -121,3 +121,51 @@ func (rt *RepoWordsPg) GetWordsMap() (*map[string][]string, error) {
 	wordsLib := words.CreateAndInitMapWords()
 	return wordsLib, nil
 }
+
+func (rt *RepoWordsPg) GetTranslationRus(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words where russian=$1", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}
+
+func (rt *RepoWordsPg) GetTranslationEngl(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words where english=$1", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}
+
+func (rt *RepoWordsPg) GetTranslationEnglLike(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words WHERE english LIKE '%' || $1 || '%'", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}
+
+func (rt *RepoWordsPg) GetTranslationRusLike(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words WHERE russian LIKE '%' || $1 || '%'", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}

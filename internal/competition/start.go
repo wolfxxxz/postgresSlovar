@@ -5,6 +5,7 @@ import (
 	"log"
 	"postgresTakeWords/internal/models"
 	"time"
+	"unicode"
 )
 
 func (c *Competition) StartCompetition() error {
@@ -45,13 +46,10 @@ func (c *Competition) StartCompetition() error {
 			}
 
 		case mapWords:
-			maps, err := c.repoWordsPg.GetWordsMap()
-			if err != nil {
+			if err := c.translator(); err != nil {
 				c.log.Error(err)
-				return err
 			}
 
-			c.log.Info((*maps)["Большой"])
 		case exit:
 			fmt.Println("You have to do it, your dream wait")
 			return nil
@@ -59,6 +57,108 @@ func (c *Competition) StartCompetition() error {
 	}
 
 }
+
+func (c Competition) translator() error {
+	fmt.Printf("для выхода введите [%v]\n", exit)
+	Word := ""
+	for {
+		fmt.Println()
+		fmt.Scan(&Word)
+		if Word == exit {
+			break
+		}
+
+		capitalizedWord := capitalizeFirstRune(Word)
+		if isCyrillic(capitalizedWord) {
+			words, err := c.repoWordsPg.GetTranslationRus(capitalizedWord)
+			if err != nil {
+				return err
+			}
+
+			if words == nil {
+				words, err = c.repoWordsPg.GetTranslationRusLike(capitalizedWord)
+				if err != nil {
+					return err
+				}
+
+			}
+
+			printAll(words)
+			continue
+		}
+
+		if !isCyrillic(capitalizedWord) {
+			words, err := c.repoWordsPg.GetTranslationEngl(capitalizedWord)
+			if err != nil {
+				return err
+			}
+
+			if words == nil {
+				words, err = c.repoWordsPg.GetTranslationEnglLike(capitalizedWord)
+				if err != nil {
+					return err
+				}
+
+			}
+
+			printAll(words)
+			continue
+
+		}
+	}
+
+	return nil
+}
+
+func printAll(words []*models.Word) {
+	for _, word := range words {
+		fmt.Printf(" %v -- %v \n", word.Russian, word.English)
+	}
+}
+
+func printEngl(words []*models.Word) {
+	for i, word := range words {
+		fmt.Printf("num %v and value %v | ", i+1, word.English)
+	}
+}
+
+func printRuss(words []*models.Word) {
+	for i, word := range words {
+		fmt.Printf("num %v and value %v | ", i+1, word.Russian)
+	}
+}
+
+func isCyrillic(s string) bool {
+	for _, r := range s {
+		if unicode.Is(unicode.Cyrillic, r) {
+			return true
+		}
+	}
+	return false
+}
+
+// func (c Competition) translator() error {
+// 	maps, err := c.repoWordsPg.GetWordsMap()
+// 	if err != nil {
+// 		c.log.Error(err)
+// 		return err
+// 	}
+
+// 	fmt.Printf("для выхода введите [%v]\n", exit)
+// 	rusWord := ""
+// 	for {
+// 		fmt.Scan(&rusWord)
+// 		if rusWord == exit {
+// 			break
+// 		}
+
+// 		capitalizedWord := capitalizeFirstRune(rusWord)
+
+// 		fmt.Println((*maps)[capitalizedWord])
+// 	}
+
+// 	return nil
+// }
 
 func (c Competition) backup() error {
 	c.log.Info("download All words from db")
