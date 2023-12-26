@@ -4,7 +4,7 @@ import (
 	"context"
 	"postgresTakeWords/internal/competition"
 	"postgresTakeWords/internal/config"
-	"postgresTakeWords/internal/infrastructure/database"
+	"postgresTakeWords/internal/database"
 	"postgresTakeWords/internal/log"
 
 	_ "github.com/lib/pq"
@@ -39,7 +39,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	logger.Info("Conf connect")
+	logger.Info("Postgres has been connected")
 
 	compet := competition.NewCompetition(stat, libJson, libTxt, newWords, psqlDB, logger)
 	err = compet.StartCompetition()

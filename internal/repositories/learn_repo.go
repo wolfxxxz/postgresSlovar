@@ -24,7 +24,7 @@ func (rl *RepoLearn) InsertWordLearn(word *models.Word) error {
 	_, err := rl.db.Exec("INSERT INTO words_learn (id, english, russian, theme) VALUES ($1, $2, $3, $4)",
 		word.Id, word.English, word.Russian, word.Theme)
 	if err != nil {
-		appErr := apperrors.InsertWordLearnErr.AppendMessage(err)
+		appErr := apperrors.InsertWordLearnErr.AppendMessage(err, word)
 		rl.log.Error(appErr)
 		return appErr
 	}

@@ -80,7 +80,7 @@ func (c Competition) backup() error {
 		return err
 	}
 
-	c.log.Info("backup has been safe")
+	c.log.Info("backup has been saved")
 	return nil
 }
 

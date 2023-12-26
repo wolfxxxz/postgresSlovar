@@ -60,6 +60,7 @@ func (c *Competition) WorkTest(s *[]models.Word, maps *map[string][]string) (*[]
 			exit1 = true
 			n = 1
 		}
+
 		if y > 0 && n > 0 {
 			yes++
 			models.Preppend(s, v)
@@ -210,6 +211,7 @@ func CompareWithMap(russian, answer string, mapWords *map[string][]string) bool 
 		}
 	}
 
+	fmt.Println("__________________________________", englishWords)
 	return false
 }
 
@@ -224,11 +226,11 @@ func ScanTime(a *string) {
 func PrintXpen(s string) {
 	var d int
 	for i := 0; i <= 15; i++ {
-
 		d++
 		for i := 0; i <= d; i++ {
 			fmt.Print(" ")
 		}
+
 		fmt.Println(s, "   ", s, "   ", s)
 	}
 }
