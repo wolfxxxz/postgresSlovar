@@ -56,6 +56,14 @@ var (
 		Message: "Failed to GetAllFromTXT",
 		Code:    NewWordsTXTRepo,
 	}
+	GetAllWordsXLSXErr = AppError{
+		Message: "Failed to GetAllWordsXLSXErr",
+		Code:    NewWordsTXTRepo,
+	}
+	SaveAllAsXLSXErr = AppError{
+		Message: "Failed to SaveAllAsXLSXErr",
+		Code:    NewWordsTXTRepo,
+	}
 	CleanNewWordsErr = AppError{
 		Message: "Failed to CleanNewWords",
 		Code:    NewWordsTXTRepo,
@@ -65,7 +73,7 @@ var (
 		Code:    RepoWordsPg,
 	}
 	CheckWordByEnglishErr = AppError{
-		Message: "Failed to CheckWordByEnglish",
+		Message: "Failed to CheckWordByEnglish [THIS WORLD IS NEW]",
 		Code:    RepoWordsPg,
 	}
 	InsertWordErr = AppError{

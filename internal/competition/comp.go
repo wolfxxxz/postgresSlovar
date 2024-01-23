@@ -36,14 +36,14 @@ func NewCompetition(statPath string, reserveCopyPath string, reserveCopyPathTXT 
 	}
 }
 
-func (c *Competition) WorkTest(s *[]models.Word, maps *map[string][]string) (*[]models.Word, error) {
+func (c *Competition) WorkTest(s []*models.Word, maps *map[string][]string) ([]*models.Word, error) {
 	startTime := time.Now()
-	var LearnSlice []models.Word
-	quantity := len(*s)
+	LearnSlice := []*models.Word{}
+	quantity := len(s)
 	var capSlovar int = quantity
-	NewSlovar := make(models.Slovarick, capSlovar)
-	copy(NewSlovar, (*s)[:quantity])
-	*s = (*s)[quantity:]
+	NewSlovar := make([]*models.Word, capSlovar)
+	copy(NewSlovar, (s)[:quantity])
+	s = (s)[quantity:]
 	fmt.Println("                     START")
 	var yes int
 	var not int
@@ -52,7 +52,7 @@ func (c *Competition) WorkTest(s *[]models.Word, maps *map[string][]string) (*[]
 	for _, v := range NewSlovar {
 		if exit1 {
 			not++
-			models.Preppend(s, v)
+			s = models.Preppend(s, v)
 			continue
 		}
 
@@ -64,20 +64,20 @@ func (c *Competition) WorkTest(s *[]models.Word, maps *map[string][]string) (*[]
 
 		if y > 0 && n > 0 {
 			yes++
-			models.Preppend(s, v)
-			models.Preppend(&LearnSlice, v)
+			s = models.Preppend(s, v)
+			LearnSlice = models.Preppend(LearnSlice, v)
 			continue
 		}
 
 		if y > 0 {
 			yes++
 			v.RightAnswer += 1
-			c.repoWordsPg.UpdateRightAnswer(&v)
-			models.AppendWord(s, v)
+			c.repoWordsPg.UpdateRightAnswer(v)
+			s = models.AppendWord(s, v)
 		} else if n > 0 {
 			not++
-			models.Preppend(s, v)
-			models.Preppend(&LearnSlice, v)
+			s = models.Preppend(s, v)
+			LearnSlice = models.Preppend(LearnSlice, v)
 		} else {
 			break
 		}
@@ -88,10 +88,10 @@ func (c *Competition) WorkTest(s *[]models.Word, maps *map[string][]string) (*[]
 	sStat := models.NewStatistick(quantity, yes, not)
 	c.stat.WriteStatistic(*sStat)
 	fmt.Println(yes, not)
-	return &LearnSlice, nil
+	return LearnSlice, nil
 }
 
-func (c *Competition) LearnWords(s []models.Word) bool {
+func (c *Competition) LearnWords(s []*models.Word) bool {
 	maps, err := c.repoWordsPg.GetWordsMap()
 	if err != nil {
 		c.log.Error(err)
@@ -140,7 +140,7 @@ func ScanInt() (n int) {
 	return
 }
 
-func Compare(l models.Word, mapWord *map[string][]string) (yes int, not int, trExit bool) {
+func Compare(l *models.Word, mapWord *map[string][]string) (yes int, not int, trExit bool) {
 	fmt.Println(l.Russian, " ||Тема: ", l.Theme)
 	c := IgnorSpace(l.English)
 

@@ -27,13 +27,15 @@ func NewSlovar(w Word) *Slovarick {
 	return s
 }
 
-func AppendWord(s *[]Word, w Word) {
-	*s = append(*s, w)
+func AppendWord(s []*Word, w *Word) []*Word {
+	s = append(s, w)
+	return s
 }
 
-func Preppend(s *[]Word, w Word) {
-	SliceWord := []Word{w}
-	*s = append(SliceWord, *s...)
+func Preppend(s []*Word, w *Word) []*Word {
+	SliceWord := []*Word{w}
+	s = append(SliceWord, s...)
+	return s
 }
 
 func (s *Slovarick) CreateAndInitMapWords() *map[string][]string {

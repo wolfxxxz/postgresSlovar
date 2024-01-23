@@ -180,6 +180,12 @@ func (c Competition) backup() error {
 		return err
 	}
 
+	err = c.repoBackUpCopy.SaveWordNewAsXLSX(oldWords) //SaveAllAsTXT(oldWords)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
 	c.log.Info("backup has been saved")
 	return nil
 }
@@ -191,8 +197,8 @@ func (c Competition) updateFromBackUp() error {
 		return err
 	}
 
-	for _, v := range *wordsFromBackUp {
-		err := c.repoWordsPg.UpdateWord(&v)
+	for _, v := range wordsFromBackUp {
+		err := c.repoWordsPg.UpdateWord(v)
 		if err != nil {
 			c.log.Error(err)
 			return err
@@ -209,7 +215,7 @@ func (c Competition) restore() error {
 		return err
 	}
 
-	fmt.Println(len(*oldWords))
+	fmt.Println(len(oldWords))
 	err = c.InsertWordsIfNotExist(oldWords)
 	if err != nil {
 		c.log.Errorf("main %v", err)
@@ -230,12 +236,12 @@ func (c Competition) learn() error {
 		return err
 	}
 
-	if ok := c.LearnWords(*wordsLearn); !ok {
+	if ok := c.LearnWords(wordsLearn); !ok {
 		c.log.Info("!ok)")
 	}
 
-	fmt.Println("After learn :", len(*wordsLearn))
-	for _, v := range *wordsLearn {
+	fmt.Println("After learn :", len(wordsLearn))
+	for _, v := range wordsLearn {
 		err := c.repoLearn.DeleteLearnWordsId(v.Id)
 		if err != nil {
 			c.log.Error(err)
@@ -270,7 +276,7 @@ func (c *Competition) test() error {
 	err = c.repoLearn.InsertWordsLearn(wrongWords)
 	if err != nil {
 		c.log.Error(err)
-		return err
+		return nil
 	}
 
 	return nil
@@ -325,14 +331,14 @@ func printMenu() {
 	}
 }
 
-func (c *Competition) InsertWordsIfNotExist(words *[]models.Word) error {
-	for _, word := range *words {
-		id, err := c.repoWordsPg.CheckWordByEnglish(&word)
+func (c *Competition) InsertWordsIfNotExist(words []*models.Word) error {
+	for _, word := range words {
+		id, err := c.repoWordsPg.CheckWordByEnglish(word)
 		if err != nil {
 			c.log.Error(err)
 			vCopy := word
 			vCopy.Id = id
-			err = c.repoLearn.InsertWordLearn(&vCopy)
+			err = c.repoLearn.InsertWordLearn(vCopy)
 			if err != nil {
 				c.log.Error(err)
 				return err
@@ -340,7 +346,7 @@ func (c *Competition) InsertWordsIfNotExist(words *[]models.Word) error {
 		}
 
 		if id == 0 {
-			err = c.repoWordsPg.InsertWord(&word)
+			err = c.repoWordsPg.InsertWord(word)
 			if err != nil {
 				log.Println(err)
 				return err

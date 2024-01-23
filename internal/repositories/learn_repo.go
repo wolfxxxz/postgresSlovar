@@ -26,15 +26,15 @@ func (rl *RepoLearn) InsertWordLearn(word *models.Word) error {
 	if err != nil {
 		appErr := apperrors.InsertWordLearnErr.AppendMessage(err, word)
 		rl.log.Error(appErr)
-		return appErr
+		//return appErr
 	}
 
 	return nil
 }
 
-func (rl *RepoLearn) InsertWordsLearn(words *[]models.Word) error {
-	for _, v := range *words {
-		err := rl.InsertWordLearn(&v)
+func (rl *RepoLearn) InsertWordsLearn(words []*models.Word) error {
+	for _, v := range words {
+		err := rl.InsertWordLearn(v)
 		if err != nil {
 			return err
 		}
@@ -43,8 +43,8 @@ func (rl *RepoLearn) InsertWordsLearn(words *[]models.Word) error {
 	return nil
 }
 
-func (rl *RepoLearn) GetWordsLearn(quantity int) (*[]models.Word, error) {
-	var words []models.Word
+func (rl *RepoLearn) GetWordsLearn(quantity int) ([]*models.Word, error) {
+	words := []*models.Word{}
 	err := rl.db.Select(&words, "SELECT * FROM words_learn limit $1", quantity)
 	if err != nil {
 		appErr := apperrors.GetWordsLearnErr.AppendMessage(err)
@@ -52,7 +52,7 @@ func (rl *RepoLearn) GetWordsLearn(quantity int) (*[]models.Word, error) {
 		return nil, appErr
 	}
 
-	return &words, nil
+	return words, nil
 }
 
 func (rl *RepoLearn) DeleteLearnWordsId(id int) error {

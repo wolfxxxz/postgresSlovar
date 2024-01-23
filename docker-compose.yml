@@ -10,5 +10,6 @@ services:
       - ${HOME}/pgdata/:/var/lib/postgresql/data  
     environment:
       POSTGRES_PASSWORD: 1 
-
+# 5435 внешний порт 
+# 5432 внутри контейнера
        

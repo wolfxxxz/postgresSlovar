@@ -21,8 +21,8 @@ func NewRepoWordsPg(db *sqlx.DB, log *logrus.Logger) *RepoWordsPg {
 	return &RepoWordsPg{db: db, collection: collectionRepoTest, log: log}
 }
 
-func (rt *RepoWordsPg) GetAllWords() (*[]models.Word, error) {
-	var words []models.Word
+func (rt *RepoWordsPg) GetAllWords() ([]*models.Word, error) {
+	words := []*models.Word{}
 	err := rt.db.Select(&words, "SELECT * FROM words order by theme")
 	if err != nil {
 		appErr := apperrors.GetAllWordsErr.AppendMessage(err)
@@ -30,7 +30,7 @@ func (rt *RepoWordsPg) GetAllWords() (*[]models.Word, error) {
 		return nil, appErr
 	}
 
-	return &words, nil
+	return words, nil
 }
 
 func (rt *RepoWordsPg) CheckWordByEnglish(word *models.Word) (int, error) {
@@ -39,7 +39,7 @@ func (rt *RepoWordsPg) CheckWordByEnglish(word *models.Word) (int, error) {
 	err := rt.db.QueryRow(query, word.English).Scan(&id)
 	if err != nil {
 		appErr := apperrors.CheckWordByEnglishErr.AppendMessage(err)
-		rt.log.Error(appErr)
+		rt.log.Info(appErr)
 		return 0, nil
 	}
 
@@ -61,8 +61,8 @@ func (rt *RepoWordsPg) InsertWord(word *models.Word) error {
 	return nil
 }
 
-func (rt *RepoWordsPg) GetWordsWhereRA(quantity int) (*[]models.Word, error) {
-	var words []models.Word
+func (rt *RepoWordsPg) GetWordsWhereRA(quantity int) ([]*models.Word, error) {
+	words := []*models.Word{}
 	err := rt.db.Select(&words, "SELECT * FROM words order by right_answer limit $1", quantity)
 	if err != nil {
 		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
@@ -70,7 +70,7 @@ func (rt *RepoWordsPg) GetWordsWhereRA(quantity int) (*[]models.Word, error) {
 		return nil, appErr
 	}
 
-	return &words, nil
+	return words, nil
 }
 
 func (rt *RepoWordsPg) UpdateRightAnswer(word *models.Word) error {

@@ -20,7 +20,7 @@ func NewUpdateWordsFromTXTRepo(newWordsPath string, log *logrus.Logger) *UpdateW
 	return &UpdateWordsFromTXTRepo{newWordsPath: newWordsPath, log: log}
 }
 
-func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
+func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() ([]*models.Word, error) {
 	data, err := os.ReadFile(tr.newWordsPath)
 	if err != nil {
 		appErr := apperrors.GetAllFromTXTErr.AppendMessage(err)
@@ -37,7 +37,7 @@ func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
 	}
 
 	lines := strings.Split(content, "\n")
-	var words []models.Word
+	words := []*models.Word{}
 	for _, line := range lines {
 		if line == "" {
 			continue
@@ -60,11 +60,11 @@ func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() (*[]models.Word, error) {
 			theme = lines[2]
 		}
 
-		word := models.Word{Id: id, English: lines[0], Russian: lines[1], Theme: theme}
+		word := &models.Word{Id: id, English: lines[0], Russian: lines[1], Theme: theme}
 		words = append(words, word)
 	}
 
-	return &words, nil
+	return words, nil
 }
 
 func (tr *UpdateWordsFromTXTRepo) CleanNewWords(txt string) error {
