@@ -1,27 +1,20 @@
 package repositories
 
-import (
-	"fmt"
-	"postgresTakeWords/internal/apperrors"
-	"postgresTakeWords/internal/models"
-
-	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
-)
-
+/*
 var collectionRepoTest = "words"
 
-type RepoWordsPg struct {
+
+type repoWordsPg struct {
 	db         *sqlx.DB
 	collection string
 	log        *logrus.Logger
 }
 
-func NewRepoWordsPg(db *sqlx.DB, log *logrus.Logger) *RepoWordsPg {
-	return &RepoWordsPg{db: db, collection: collectionRepoTest, log: log}
+func NewRepoWordsPg(db *sqlx.DB, log *logrus.Logger) RepoWordsPg {
+	return &repoWordsPg{db: db, collection: collectionRepoTest, log: log}
 }
 
-func (rt *RepoWordsPg) GetAllWords() ([]*models.Word, error) {
+func (rt *repoWordsPg) GetAllWords() ([]*models.Word, error) {
 	words := []*models.Word{}
 	err := rt.db.Select(&words, "SELECT * FROM words order by theme")
 	if err != nil {
@@ -33,20 +26,7 @@ func (rt *RepoWordsPg) GetAllWords() ([]*models.Word, error) {
 	return words, nil
 }
 
-func (rt *RepoWordsPg) CheckWordByEnglish(word *models.Word) (int, error) {
-	var id int
-	query := "SELECT id FROM words WHERE english=$1"
-	err := rt.db.QueryRow(query, word.English).Scan(&id)
-	if err != nil {
-		appErr := apperrors.CheckWordByEnglishErr.AppendMessage(err)
-		rt.log.Info(appErr)
-		return 0, nil
-	}
-
-	return id, fmt.Errorf("word [%v] is already exist in DB", word.English)
-}
-
-func (rt *RepoWordsPg) InsertWord(word *models.Word) error {
+func (rt *repoWordsPg) InsertWord(ctx context.Context, word *models.Word) error {
 	var insertedId int
 	query := "INSERT INTO words (english, russian, theme, right_answer) VALUES ($1, $2, $3, $4) RETURNING id"
 	err := rt.db.QueryRow(query, word.English, word.Russian, word.Theme, word.RightAnswer).Scan(&insertedId)
@@ -61,7 +41,68 @@ func (rt *RepoWordsPg) InsertWord(word *models.Word) error {
 	return nil
 }
 
-func (rt *RepoWordsPg) GetWordsWhereRA(quantity int) ([]*models.Word, error) {
+func (rt *repoWordsPg) GetTranslationRus(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words where russian=$1", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}
+
+func (rt *repoWordsPg) GetTranslationEngl(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words where english=$1", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}
+
+func (rt *repoWordsPg) GetTranslationEnglLike(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words WHERE english LIKE '%' || $1 || '%'", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}
+
+func (rt *repoWordsPg) GetTranslationRusLike(word string) ([]*models.Word, error) {
+	var words []*models.Word
+	err := rt.db.Select(&words, "SELECT * FROM words WHERE russian LIKE '%' || $1 || '%'", word)
+	if err != nil {
+		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return nil, appErr
+	}
+
+	return words, nil
+}
+
+func (rt *repoWordsPg) CheckWordByEnglish(word *models.Word) (int, error) {
+	var id int
+	query := "SELECT id FROM words WHERE english=$1"
+	err := rt.db.QueryRow(query, word.English).Scan(&id)
+	if err != nil {
+		appErr := apperrors.CheckWordByEnglishErr.AppendMessage(err)
+		rt.log.Info(appErr)
+		return 0, nil
+	}
+
+	return id, fmt.Errorf("word [%v] is already exist in DB", word.English)
+}
+
+func (rt *repoWordsPg) GetWordsWhereRA(quantity int) ([]*models.Word, error) {
 	words := []*models.Word{}
 	err := rt.db.Select(&words, "SELECT * FROM words order by right_answer limit $1", quantity)
 	if err != nil {
@@ -73,7 +114,7 @@ func (rt *RepoWordsPg) GetWordsWhereRA(quantity int) ([]*models.Word, error) {
 	return words, nil
 }
 
-func (rt *RepoWordsPg) UpdateRightAnswer(word *models.Word) error {
+func (rt *repoWordsPg) UpdateRightAnswer(word *models.Word) error {
 	res, err := rt.db.Exec("update words set right_answer=$1 where id=$2", word.RightAnswer, word.Id)
 	if err != nil {
 		appErr := apperrors.UpdateRightAnswerErr.AppendMessage(err)
@@ -91,7 +132,7 @@ func (rt *RepoWordsPg) UpdateRightAnswer(word *models.Word) error {
 	return nil
 }
 
-func (rt *RepoWordsPg) UpdateWord(word *models.Word) error {
+func (rt *repoWordsPg) UpdateWord(word *models.Word) error {
 	res, err := rt.db.Exec("update words set english=$1, russian=$2, theme=$3 where id=$4",
 		word.English, word.Russian, word.Theme, word.Id)
 	if err != nil {
@@ -110,7 +151,7 @@ func (rt *RepoWordsPg) UpdateWord(word *models.Word) error {
 	return nil
 }
 
-func (rt *RepoWordsPg) GetWordsMap() (*map[string][]string, error) {
+func (rt *repoWordsPg) GetWordsMap() (*map[string][]string, error) {
 	var words models.Slovarick
 	err := rt.db.Select(&words, "SELECT english, russian FROM words order by russian")
 	if err != nil {
@@ -122,50 +163,8 @@ func (rt *RepoWordsPg) GetWordsMap() (*map[string][]string, error) {
 	return wordsLib, nil
 }
 
-func (rt *RepoWordsPg) GetTranslationRus(word string) ([]*models.Word, error) {
-	var words []*models.Word
-	err := rt.db.Select(&words, "SELECT * FROM words where russian=$1", word)
-	if err != nil {
-		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
-		rt.log.Error(appErr)
-		return nil, appErr
-	}
+func (rt *repoWordsPg) InsertWordsLibrary(ctx context.Context, library []*models.Word) error {
 
-	return words, nil
+	return nil
 }
-
-func (rt *RepoWordsPg) GetTranslationEngl(word string) ([]*models.Word, error) {
-	var words []*models.Word
-	err := rt.db.Select(&words, "SELECT * FROM words where english=$1", word)
-	if err != nil {
-		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
-		rt.log.Error(appErr)
-		return nil, appErr
-	}
-
-	return words, nil
-}
-
-func (rt *RepoWordsPg) GetTranslationEnglLike(word string) ([]*models.Word, error) {
-	var words []*models.Word
-	err := rt.db.Select(&words, "SELECT * FROM words WHERE english LIKE '%' || $1 || '%'", word)
-	if err != nil {
-		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
-		rt.log.Error(appErr)
-		return nil, appErr
-	}
-
-	return words, nil
-}
-
-func (rt *RepoWordsPg) GetTranslationRusLike(word string) ([]*models.Word, error) {
-	var words []*models.Word
-	err := rt.db.Select(&words, "SELECT * FROM words WHERE russian LIKE '%' || $1 || '%'", word)
-	if err != nil {
-		appErr := apperrors.GetWordsWhereRAErr.AppendMessage(err)
-		rt.log.Error(appErr)
-		return nil, appErr
-	}
-
-	return words, nil
-}
+*/

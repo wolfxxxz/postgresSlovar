@@ -2,14 +2,32 @@ package models
 
 import (
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type Word struct {
-	Id          int    `json:"id"`
-	English     string `json:"english"`
-	Russian     string `json:"russian"`
-	Theme       string `json:"theme"`
-	RightAnswer int    `json:"rightAnswer" db:"right_answer"`
+	gorm.Model
+	ID           int    `json:"id" gorm:"primaryKey"`
+	English      string `json:"english"`
+	Russian      string `json:"russian"`
+	Preposition  string `json:"preposition"`
+	Theme        string `json:"theme"`
+	PartOfSpeech string `json:"part_of_speech"`
+	RightAnswer  int    `json:"rightAnswer" db:"right_answer"`
+	CreatedAt    string `json:"created_at"`
+}
+
+type WordsLearn struct {
+	gorm.Model
+	ID           int    `json:"id" gorm:"primaryKey"`
+	English      string `json:"english"`
+	Russian      string `json:"russian"`
+	Preposition  string `json:"preposition"`
+	Theme        string `json:"theme"`
+	PartOfSpeech string `json:"part_of_speech"`
+	RightAnswer  int    `json:"rightAnswer" db:"right_answer"`
+	CreatedAt    string `json:"created_at"`
 }
 
 func NewWord() *Word {
@@ -17,7 +35,7 @@ func NewWord() *Word {
 }
 
 func NewLibrary(newId int, newEnglish string, newRussian string, newTheme string) *Word {
-	return &Word{Id: newId, English: newEnglish, Russian: newRussian, Theme: newTheme}
+	return &Word{ID: newId, English: newEnglish, Russian: newRussian, Theme: newTheme}
 }
 
 type Slovarick []Word

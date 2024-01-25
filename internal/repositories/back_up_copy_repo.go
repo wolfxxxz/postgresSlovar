@@ -7,6 +7,7 @@ import (
 	"os"
 	"postgresTakeWords/internal/apperrors"
 	"postgresTakeWords/internal/models"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tealeg/xlsx"
@@ -42,7 +43,7 @@ func (tr *BackUpCopyRepo) GetAllFromBackUp() ([]*models.Word, error) {
 	}
 
 	words := []*models.Word{}
-	err = json.Unmarshal(data, words)
+	err = json.Unmarshal(data, &words)
 	if err != nil {
 		appErr := apperrors.GetAllFromBackUpErr.AppendMessage(err)
 		tr.log.Error(appErr)
@@ -104,17 +105,35 @@ func (tr *BackUpCopyRepo) GetAllWordsFromBackUpXlsx() ([]*models.Word, error) {
 	}
 
 	wordNew := []*models.Word{}
-	// Проход по всем листам в файле
 	for _, sheet := range xlFile.Sheets {
-		fmt.Println("Sheet Name:", sheet.Name)
-		// Проход по всем строкам в листе
+		if sheet == nil {
+			break
+		}
+
 		for _, row := range sheet.Rows {
-			// Проход по всем ячейкам в строке
-			for _, cell := range row.Cells {
-				text := cell.String()
-				fmt.Printf("%s\t", text)
+			if len(row.Cells) == 0 {
+				continue
 			}
-			fmt.Println()
+
+			num, err := strconv.Atoi(row.Cells[0].String())
+			if err != nil {
+				return nil, err
+			}
+
+			rAnsw, err := strconv.Atoi(row.Cells[6].String())
+			if err != nil {
+				return nil, err
+			}
+
+			wordNew = append(wordNew, &models.Word{
+				ID:           num,
+				English:      capitalizeFirstRune(row.Cells[1].String()),
+				Preposition:  row.Cells[2].String(),
+				Russian:      capitalizeFirstRune(row.Cells[3].String()),
+				Theme:        row.Cells[4].String(),
+				PartOfSpeech: row.Cells[5].String(),
+				RightAnswer:  rAnsw,
+			})
 		}
 	}
 
@@ -134,13 +153,17 @@ func (tr *BackUpCopyRepo) SaveWordNewAsXLSX(words []*models.Word) error {
 	for _, word := range words {
 		row := sheet.AddRow()
 		cell := row.AddCell()
-		cell.SetInt(word.Id)
+		cell.SetInt(word.ID)
 		cell = row.AddCell()
 		cell.Value = word.English
+		cell = row.AddCell()
+		cell.Value = word.Preposition
 		cell = row.AddCell()
 		cell.Value = word.Russian
 		cell = row.AddCell()
 		cell.Value = word.Theme
+		cell = row.AddCell()
+		cell.Value = word.PartOfSpeech
 		cell = row.AddCell()
 		cell.SetInt(word.RightAnswer)
 	}

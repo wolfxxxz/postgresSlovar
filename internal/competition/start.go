@@ -1,6 +1,7 @@
 package competition
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"postgresTakeWords/internal/models"
@@ -116,18 +117,6 @@ func printAll(words []*models.Word) {
 	}
 }
 
-func printEngl(words []*models.Word) {
-	for i, word := range words {
-		fmt.Printf("num %v and value %v | ", i+1, word.English)
-	}
-}
-
-func printRuss(words []*models.Word) {
-	for i, word := range words {
-		fmt.Printf("num %v and value %v | ", i+1, word.Russian)
-	}
-}
-
 func isCyrillic(s string) bool {
 	for _, r := range s {
 		if unicode.Is(unicode.Cyrillic, r) {
@@ -136,29 +125,6 @@ func isCyrillic(s string) bool {
 	}
 	return false
 }
-
-// func (c Competition) translator() error {
-// 	maps, err := c.repoWordsPg.GetWordsMap()
-// 	if err != nil {
-// 		c.log.Error(err)
-// 		return err
-// 	}
-
-// 	fmt.Printf("для выхода введите [%v]\n", exit)
-// 	rusWord := ""
-// 	for {
-// 		fmt.Scan(&rusWord)
-// 		if rusWord == exit {
-// 			break
-// 		}
-
-// 		capitalizedWord := capitalizeFirstRune(rusWord)
-
-// 		fmt.Println((*maps)[capitalizedWord])
-// 	}
-
-// 	return nil
-// }
 
 func (c Competition) backup() error {
 	c.log.Info("download All words from db")
@@ -180,7 +146,7 @@ func (c Competition) backup() error {
 		return err
 	}
 
-	err = c.repoBackUpCopy.SaveWordNewAsXLSX(oldWords) //SaveAllAsTXT(oldWords)
+	err = c.repoBackUpCopy.SaveWordNewAsXLSX(oldWords)
 	if err != nil {
 		c.log.Error(err)
 		return err
@@ -191,7 +157,7 @@ func (c Competition) backup() error {
 }
 
 func (c Competition) updateFromBackUp() error {
-	wordsFromBackUp, err := c.repoBackUpCopy.GetAllFromBackUp()
+	wordsFromBackUp, err := c.repoBackUpCopy.GetAllWordsFromBackUpXlsx() //c.repoBackUpCopy.GetAllFromBackUp()
 	if err != nil {
 		c.log.Error(err)
 		return err
@@ -236,13 +202,28 @@ func (c Competition) learn() error {
 		return err
 	}
 
-	if ok := c.LearnWords(wordsLearn); !ok {
+	words := []*models.Word{}
+	for _, word := range wordsLearn {
+		wordLearn := &models.Word{
+			ID:           word.ID,
+			English:      word.English,
+			Russian:      word.Russian,
+			Preposition:  word.Preposition,
+			Theme:        word.Theme,
+			PartOfSpeech: word.PartOfSpeech,
+			RightAnswer:  word.RightAnswer,
+		}
+
+		words = append(words, wordLearn)
+	}
+
+	if ok := c.LearnWords(words); !ok {
 		c.log.Info("!ok)")
 	}
 
 	fmt.Println("After learn :", len(wordsLearn))
 	for _, v := range wordsLearn {
-		err := c.repoLearn.DeleteLearnWordsId(v.Id)
+		err := c.repoLearn.DeleteLearnWordsId(v.ID)
 		if err != nil {
 			c.log.Error(err)
 			return err
@@ -273,7 +254,23 @@ func (c *Competition) test() error {
 		c.log.Error(err)
 		return err
 	}
-	err = c.repoLearn.InsertWordsLearn(wrongWords)
+
+	wordsLearn := []*models.WordsLearn{}
+	for _, word := range wrongWords {
+		wordLearn := &models.WordsLearn{
+			ID:           word.ID,
+			English:      word.English,
+			Russian:      word.Russian,
+			Preposition:  word.Preposition,
+			Theme:        word.Theme,
+			PartOfSpeech: word.PartOfSpeech,
+			RightAnswer:  word.RightAnswer,
+		}
+
+		wordsLearn = append(wordsLearn, wordLearn)
+	}
+
+	err = c.repoLearn.InsertWordsLearn(wordsLearn)
 	if err != nil {
 		c.log.Error(err)
 		return nil
@@ -289,8 +286,21 @@ func (c *Competition) update() error {
 		return err
 	}
 
-	c.log.Info(newWords)
-	c.repoUpdateByTXT.CleanNewWords("You need to add your words here")
+	c.log.Info("new words: ", len(newWords))
+
+	countWords, err := c.repoWordsPg.GetAllWords()
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	count := len(countWords)
+
+	for i, v := range newWords {
+		_ = v
+		count++
+		newWords[i].ID = count
+	}
 
 	err = c.InsertWordsIfNotExist(newWords)
 	if err != nil {
@@ -305,6 +315,12 @@ func (c *Competition) update() error {
 	}
 
 	err = c.repoBackUpCopy.SaveAllAsJson(words)
+	if err != nil {
+		c.log.Error(err)
+		return err
+	}
+
+	err = c.repoUpdateByTXT.CleanNewWords("You need to add your words here")
 	if err != nil {
 		c.log.Error(err)
 		return err
@@ -336,9 +352,16 @@ func (c *Competition) InsertWordsIfNotExist(words []*models.Word) error {
 		id, err := c.repoWordsPg.CheckWordByEnglish(word)
 		if err != nil {
 			c.log.Error(err)
-			vCopy := word
-			vCopy.Id = id
-			err = c.repoLearn.InsertWordLearn(vCopy)
+			wordLearn := &models.WordsLearn{
+				ID:           word.ID,
+				English:      word.English,
+				Russian:      word.Russian,
+				Preposition:  word.Preposition,
+				Theme:        word.Theme,
+				PartOfSpeech: word.PartOfSpeech,
+				RightAnswer:  word.RightAnswer,
+			}
+			err = c.repoLearn.InsertWordLearn(context.TODO(), wordLearn)
 			if err != nil {
 				c.log.Error(err)
 				return err
@@ -346,7 +369,7 @@ func (c *Competition) InsertWordsIfNotExist(words []*models.Word) error {
 		}
 
 		if id == 0 {
-			err = c.repoWordsPg.InsertWord(word)
+			err = c.repoWordsPg.InsertWord(context.TODO(), word)
 			if err != nil {
 				log.Println(err)
 				return err

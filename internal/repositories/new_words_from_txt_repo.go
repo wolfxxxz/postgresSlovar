@@ -60,7 +60,7 @@ func (tr *UpdateWordsFromTXTRepo) GetAllFromTXT() ([]*models.Word, error) {
 			theme = lines[2]
 		}
 
-		word := &models.Word{Id: id, English: lines[0], Russian: lines[1], Theme: theme}
+		word := &models.Word{ID: id, English: lines[0], Russian: lines[1], Theme: theme}
 		words = append(words, word)
 	}
 

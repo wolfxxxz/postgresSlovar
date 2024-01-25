@@ -24,6 +24,10 @@ var (
 		Message: "Failed to InitPostgress",
 		Code:    EnvParse,
 	}
+	SetupDatabaseErr = AppError{
+		Message: "Failed to InitPostgress",
+		Code:    EnvParse,
+	}
 	NewLoggerErr = AppError{
 		Message: "Failed to NewLog",
 		Code:    Log,
@@ -94,6 +98,26 @@ var (
 	}
 	GetWordsMapErr = AppError{
 		Message: "Failed to GetWordsMap",
+		Code:    RepoWordsPg,
+	}
+	GetTranslationRusErr = AppError{
+		Message: "Failed to GetTranslationRusErr",
+		Code:    RepoWordsPg,
+	}
+	GetTranslationRusLikeErr = AppError{
+		Message: "Failed to GetTranslationRusLikeErr",
+		Code:    RepoWordsPg,
+	}
+	GetTranslationEnglErr = AppError{
+		Message: "Failed to GetTranslationEnglErr",
+		Code:    RepoWordsPg,
+	}
+	GetTranslationEnglLikeErr = AppError{
+		Message: "Failed to GetTranslationEnglLikeErr",
+		Code:    RepoWordsPg,
+	}
+	InsertWordsLibraryErr = AppError{
+		Message: "Failed to InsertWordsLibraryErr",
 		Code:    RepoWordsPg,
 	}
 )

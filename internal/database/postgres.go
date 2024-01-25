@@ -12,10 +12,10 @@ import (
 )
 
 func InitClientPostgress(ctx context.Context, conf *config.Config, log *logrus.Logger) (*sqlx.DB, error) {
-	connect := fmt.Sprintf("%v://%v:%v/%v?sslmode=%v&user=%v&password=%v", conf.SqlType, conf.SqlHost,
-		conf.SqlPort, conf.SqlType, conf.SqlMode, conf.UserName, conf.Password)
+	connect := fmt.Sprintf("%v://%v:%v/%v?sslmode=%v&user=%v&password=%v&database=%v", conf.SqlType, conf.SqlHost,
+		conf.SqlPort, conf.SqlType, conf.SqlMode, conf.UserName, conf.Password, conf.DBName)
 
-	db, err := sqlx.Connect("postgres", connect)
+	db, err := sqlx.Connect(conf.SqlType, connect)
 	if err != nil {
 		appErr := apperrors.InitPostgressErr.AppendMessage(err)
 		log.Error(appErr)

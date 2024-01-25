@@ -12,24 +12,24 @@ import (
 	"unicode"
 
 	"github.com/agnivade/levenshtein"
-	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type Competition struct {
 	stat            *repositories.Stat
-	repoLearn       *repositories.RepoLearn
-	repoWordsPg     *repositories.RepoWordsPg
+	repoLearn       repositories.RepoLearn
+	repoWordsPg     repositories.RepoWordsPg
 	repoBackUpCopy  *repositories.BackUpCopyRepo
 	repoUpdateByTXT *repositories.UpdateWordsFromTXTRepo
 	log             *logrus.Logger
 }
 
-func NewCompetition(statPath string, reserveCopyPath string, reserveCopyPathTXT string, newWordsPath string, sqlDB *sqlx.DB, log *logrus.Logger) *Competition {
+func NewCompetition(statPath string, reserveCopyPath string, reserveCopyPathTXT string, newWordsPath string, sqlDB *gorm.DB, log *logrus.Logger) *Competition {
 	return &Competition{
 		stat:            repositories.NewStatRepo(statPath, log),
-		repoLearn:       repositories.NewRepoLearn(sqlDB, log),
-		repoWordsPg:     repositories.NewRepoWordsPg(sqlDB, log),
+		repoLearn:       repositories.NewLearnGormRepo(sqlDB, log),
+		repoWordsPg:     repositories.NewRepoWordsGorm(sqlDB, log),
 		repoBackUpCopy:  repositories.NewBackUpCopyRepo(reserveCopyPath, reserveCopyPathTXT, log),
 		repoUpdateByTXT: repositories.NewUpdateWordsFromTXTRepo(newWordsPath, log),
 		log:             log,
@@ -49,14 +49,14 @@ func (c *Competition) WorkTest(s []*models.Word, maps *map[string][]string) ([]*
 	var not int
 	var exit1 bool
 	fmt.Println("range NewSlovar")
-	for _, v := range NewSlovar {
+	for _, word := range NewSlovar {
 		if exit1 {
 			not++
-			s = models.Preppend(s, v)
+			s = models.Preppend(s, word)
 			continue
 		}
 
-		y, n, exit := Compare(v, maps)
+		y, n, exit := Compare(word, maps)
 		if exit {
 			exit1 = true
 			n = 1
@@ -64,20 +64,20 @@ func (c *Competition) WorkTest(s []*models.Word, maps *map[string][]string) ([]*
 
 		if y > 0 && n > 0 {
 			yes++
-			s = models.Preppend(s, v)
-			LearnSlice = models.Preppend(LearnSlice, v)
+			s = models.Preppend(s, word)
+			LearnSlice = models.Preppend(LearnSlice, word)
 			continue
 		}
 
 		if y > 0 {
 			yes++
-			v.RightAnswer += 1
-			c.repoWordsPg.UpdateRightAnswer(v)
-			s = models.AppendWord(s, v)
+			word.RightAnswer += 1
+			c.repoWordsPg.UpdateRightAnswer(word)
+			s = models.AppendWord(s, word)
 		} else if n > 0 {
 			not++
-			s = models.Preppend(s, v)
-			LearnSlice = models.Preppend(LearnSlice, v)
+			s = models.Preppend(s, word)
+			LearnSlice = models.Preppend(LearnSlice, word)
 		} else {
 			break
 		}
@@ -140,9 +140,9 @@ func ScanInt() (n int) {
 	return
 }
 
-func Compare(l *models.Word, mapWord *map[string][]string) (yes int, not int, trExit bool) {
-	fmt.Println(l.Russian, " ||Тема: ", l.Theme)
-	c := IgnorSpace(l.English)
+func Compare(word *models.Word, mapWord *map[string][]string) (yes int, not int, trExit bool) {
+	fmt.Println(word.Russian, " ||Тема:", word.Theme, "||Часть речи ", word.PartOfSpeech)
+	c := IgnorSpace(word.English)
 
 	a, _ := ScanStringOne()
 	if a == exit {
@@ -154,9 +154,9 @@ func Compare(l *models.Word, mapWord *map[string][]string) (yes int, not int, tr
 	if strings.EqualFold(c, s) {
 		yes++
 		fmt.Println("Yes")
-	} else if CompareWithMap(l.Russian, s, mapWord) {
+	} else if CompareWithMap(word.Russian, s, mapWord) {
 		fmt.Println("Не совсем правильно ")
-		y, n, exit := Compare(l, mapWord)
+		y, n, exit := Compare(word, mapWord)
 		if y == 1 {
 			yes++
 		} else if n == 1 || exit {
@@ -164,10 +164,10 @@ func Compare(l *models.Word, mapWord *map[string][]string) (yes int, not int, tr
 		}
 	} else if compareStringsLevenshtein(c, s) {
 		yes++
-		fmt.Println("Не совсем правильно ", l.English)
+		fmt.Println("Не совсем правильно ", word.English)
 	} else {
 		not++
-		fmt.Println("Incorect:", l.English)
+		fmt.Println("Incorect:", word.English)
 		for {
 			fmt.Println("Please enter correct: ")
 			j, _ := ScanStringOne()

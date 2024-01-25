@@ -1,27 +1,20 @@
 package repositories
 
-import (
-	"postgresTakeWords/internal/apperrors"
-	"postgresTakeWords/internal/models"
+/*
+var collectionRepoLearn = "words_learns"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
-)
-
-var collectionRepoLearn = "words_learn"
-
-type RepoLearn struct {
+type repoLearn struct {
 	db         *sqlx.DB
 	collection string
 	log        *logrus.Logger
 }
 
-func NewRepoLearn(db *sqlx.DB, log *logrus.Logger) *RepoLearn {
-	return &RepoLearn{db: db, collection: collectionRepoLearn, log: log}
+func NewRepoLearn(db *sqlx.DB, log *logrus.Logger) *repoLearn {
+	return &repoLearn{db: db, collection: collectionRepoLearn, log: log}
 }
 
-func (rl *RepoLearn) InsertWordLearn(word *models.Word) error {
-	_, err := rl.db.Exec("INSERT INTO words_learn (id, english, russian, theme) VALUES ($1, $2, $3, $4)",
+func (rl *repoLearn) InsertWordLearn(ctx context.Context, word *models.Word) error {
+	_, err := rl.db.Exec("INSERT INTO words_learns (id, english, russian, theme) VALUES ($1, $2, $3, $4)",
 		word.Id, word.English, word.Russian, word.Theme)
 	if err != nil {
 		appErr := apperrors.InsertWordLearnErr.AppendMessage(err, word)
@@ -32,9 +25,9 @@ func (rl *RepoLearn) InsertWordLearn(word *models.Word) error {
 	return nil
 }
 
-func (rl *RepoLearn) InsertWordsLearn(words []*models.Word) error {
+func (rl *repoLearn) InsertWordsLearn(words []*models.Word) error {
 	for _, v := range words {
-		err := rl.InsertWordLearn(v)
+		err := rl.InsertWordLearn(context.TODO(), v)
 		if err != nil {
 			return err
 		}
@@ -43,9 +36,9 @@ func (rl *RepoLearn) InsertWordsLearn(words []*models.Word) error {
 	return nil
 }
 
-func (rl *RepoLearn) GetWordsLearn(quantity int) ([]*models.Word, error) {
+func (rl *repoLearn) GetWordsLearn(quantity int) ([]*models.Word, error) {
 	words := []*models.Word{}
-	err := rl.db.Select(&words, "SELECT * FROM words_learn limit $1", quantity)
+	err := rl.db.Select(&words, "SELECT * FROM words_learns limit $1", quantity)
 	if err != nil {
 		appErr := apperrors.GetWordsLearnErr.AppendMessage(err)
 		rl.log.Error(appErr)
@@ -55,8 +48,8 @@ func (rl *RepoLearn) GetWordsLearn(quantity int) ([]*models.Word, error) {
 	return words, nil
 }
 
-func (rl *RepoLearn) DeleteLearnWordsId(id int) error {
-	_, err := rl.db.Exec("delete from words_learn where id = $1", id)
+func (rl *repoLearn) DeleteLearnWordsId(id int) error {
+	_, err := rl.db.Exec("delete from words_learns where id = $1", id)
 	if err != nil {
 		appErr := apperrors.DeleteLearnWordsIdErr.AppendMessage(err)
 		rl.log.Error(appErr)
@@ -65,3 +58,4 @@ func (rl *RepoLearn) DeleteLearnWordsId(id int) error {
 
 	return nil
 }
+*/
