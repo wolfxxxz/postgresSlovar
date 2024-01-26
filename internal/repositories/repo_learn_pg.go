@@ -22,7 +22,7 @@ type repoLearnGorm struct {
 	log *logrus.Logger
 }
 
-func NewLearnGormRepo(db *gorm.DB, log *logrus.Logger) RepoLearn { //Words {
+func NewLearnGormRepo(db *gorm.DB, log *logrus.Logger) RepoLearn {
 	return &repoLearnGorm{db: db, log: log}
 }
 
@@ -44,7 +44,7 @@ func (rl *repoLearnGorm) InsertWordLearn(ctx context.Context, word *models.Words
 	if result.Error != nil {
 		appErr := apperrors.InsertWordsLibraryErr.AppendMessage(result.Error)
 		rl.log.Error(appErr)
-		return appErr
+		return nil
 	}
 
 	if result.RowsAffected == 0 {
@@ -87,7 +87,7 @@ func (rl *repoLearnGorm) GetWordsLearn(quantity int) ([]*models.WordsLearn, erro
 }
 
 func (rl *repoLearnGorm) DeleteLearnWordsId(id int) error {
-	result := rl.db.Delete(&models.WordsLearn{}, id)
+	result := rl.db.Unscoped().Delete(&models.WordsLearn{}, id)
 	if result.Error != nil {
 		appErr := apperrors.DeleteLearnWordsIdErr.AppendMessage(result.Error)
 		rl.log.Error(appErr)

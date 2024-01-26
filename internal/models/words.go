@@ -21,7 +21,7 @@ type Word struct {
 type WordsLearn struct {
 	gorm.Model
 	ID           int    `json:"id" gorm:"primaryKey"`
-	English      string `json:"english"`
+	English      string `json:"english"` //gorm:"primaryKey"`
 	Russian      string `json:"russian"`
 	Preposition  string `json:"preposition"`
 	Theme        string `json:"theme"`

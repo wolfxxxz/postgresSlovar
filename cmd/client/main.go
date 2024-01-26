@@ -37,7 +37,6 @@ func main() {
 
 	ctx := context.Background()
 
-	//
 	db, err := database.NewPostgresDB().SetupDatabase(ctx, conf, logger)
 	if err != nil {
 		logger.Fatal(err)
@@ -59,7 +58,7 @@ func main() {
 			logger.Fatal(err)
 		}
 
-		logger.Infof("GET WORDS FROM XLSx SUCCESS %+v", words[0].English)
+		logger.Infof("GET WORDS FROM XLSx SUCCESS %+v", len(words))
 
 		repoWords := repositories.NewRepoWordsGorm(db, logger)
 		err = repoWords.InsertWordsLibrary(ctx, words)
@@ -78,7 +77,6 @@ func main() {
 	}
 
 	logger.Info("CREATE TABLE words_learn SUCCESS")
-	//
 
 	logger.Info("Postgres has been connected")
 

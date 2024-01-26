@@ -24,12 +24,6 @@ func (st Stat) Println(stat models.Statistick) {
 	fmt.Println(stat.Data)
 }
 
-func (st Stat) lineStatistic(stat models.Statistick) string {
-	todaysStat := fmt.Sprintf("Words tested: %v || Right Answer: %v || Wrong Answer: %v || Average is: %v%v ||",
-		stat.WordsTested, stat.RightAnswer, stat.WrongAnswer, stat.Average, "%") + stat.Data
-	return todaysStat
-}
-
 func (st Stat) WriteStatistic(stat models.Statistick) {
 	file, err := os.OpenFile(st.path, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -55,4 +49,10 @@ func (st Stat) WriteStatistic(stat models.Statistick) {
 		st.log.Error("STAT_REPO_ERR ", err)
 		return
 	}
+}
+
+func (st Stat) lineStatistic(stat models.Statistick) string {
+	todaysStat := fmt.Sprintf("Words tested: %v || Right Answer: %v || Wrong Answer: %v || Average is: %v%v ||",
+		stat.WordsTested, stat.RightAnswer, stat.WrongAnswer, stat.Average, "%") + stat.Data
+	return todaysStat
 }

@@ -30,7 +30,7 @@ type repoWords struct {
 	log *logrus.Logger
 }
 
-func NewRepoWordsGorm(db *gorm.DB, log *logrus.Logger) RepoWordsPg { //Words {
+func NewRepoWordsGorm(db *gorm.DB, log *logrus.Logger) RepoWordsPg {
 	return &repoWords{db: db, log: log}
 }
 
@@ -84,7 +84,8 @@ func (rt *repoWords) InsertWord(ctx context.Context, word *models.Word) error {
 }
 
 func (rt *repoWords) GetTranslationRus(word string) ([]*models.Word, error) {
-	var words []*models.Word
+	rt.log.Info("GetTrRus")
+	words := []*models.Word{}
 	err := rt.db.Where("russian = ?", word).Find(&words).Error
 	if err != nil {
 		appErr := apperrors.GetTranslationRusErr.AppendMessage(err)
