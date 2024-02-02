@@ -28,34 +28,34 @@ func NewLearnGormRepo(db *gorm.DB, log *logrus.Logger) RepoLearn {
 
 func (rl *repoLearnGorm) InsertWordLearn(ctx context.Context, word *models.WordsLearn) error {
 	if word == nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage("lib == nil")
+		appErr := apperrors.InsertWordsLearnErr.AppendMessage("lib == nil")
 		rl.log.Error(appErr)
 		return appErr
 	}
 
 	tx := rl.db.WithContext(ctx)
 	if tx.Error != nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage(tx.Error)
+		appErr := apperrors.InsertWordsLearnErr.AppendMessage(tx.Error)
 		rl.log.Error(appErr)
 		return appErr
 	}
 
 	result := tx.Create(word)
 	if result.Error != nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage(result.Error)
+		appErr := apperrors.InsertWordsLearnErr.AppendMessage(result.Error)
 		rl.log.Error(appErr)
 		return nil
 	}
 
 	if result.RowsAffected == 0 {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage("no rows affected")
+		appErr := apperrors.InsertWordsLearnErr.AppendMessage("no rows affected")
 		rl.log.Error(appErr)
 		return appErr
 	}
 
 	createdLib := &models.WordsLearn{}
 	if err := tx.First(createdLib, "id = ?", word.ID).Error; err != nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage(err)
+		appErr := apperrors.InsertWordsLearnErr.AppendMessage(err)
 		rl.log.Error(appErr)
 		return appErr
 	}

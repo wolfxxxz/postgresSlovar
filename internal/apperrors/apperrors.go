@@ -96,6 +96,10 @@ var (
 		Message: "Failed to UpdateWord",
 		Code:    RepoWordsPg,
 	}
+	UpdateWordRowAffectedErr = AppError{
+		Message: "Failed to UpdateWordRowAffectedErr",
+		Code:    RepoWordsPg,
+	}
 	GetWordsMapErr = AppError{
 		Message: "Failed to GetWordsMap",
 		Code:    RepoWordsPg,
@@ -116,8 +120,12 @@ var (
 		Message: "Failed to GetTranslationEnglLikeErr",
 		Code:    RepoWordsPg,
 	}
-	InsertWordsLibraryErr = AppError{
-		Message: "Failed to InsertWordsLibraryErr",
+	InsertWordsErr = AppError{
+		Message: "Failed to InsertWordsErr",
+		Code:    RepoWordsPg,
+	}
+	InsertWordsLearnErr = AppError{
+		Message: "Failed to InsertWordsLearnErr",
 		Code:    RepoWordsPg,
 	}
 )

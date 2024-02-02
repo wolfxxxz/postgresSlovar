@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"postgresTakeWords/internal/apperrors"
 	"postgresTakeWords/internal/models"
 	"postgresTakeWords/internal/repositories"
 
@@ -66,9 +68,19 @@ func (c *ServiceLocal) UpdateFromBackUp() error {
 		return err
 	}
 
-	for _, v := range wordsFromBackUp {
-		err := c.repoWordsPg.UpdateWord(v)
+	for _, word := range wordsFromBackUp {
+		err := c.repoWordsPg.UpdateWord(word)
 		if err != nil {
+			if err == &apperrors.UpdateWordRowAffectedErr {
+				c.log.Info(fmt.Sprintf("insert word %v, ID %v", word.English, word.ID))
+				err := c.repoWordsPg.InsertWord(context.TODO(), word)
+				if err != nil {
+					return err
+				}
+
+				continue
+			}
+
 			c.log.Error(err)
 			return err
 		}
@@ -129,6 +141,10 @@ func (c *ServiceLocal) Update() error {
 		id, err := c.repoWordsPg.CheckWordByEnglish(word)
 		if err != nil {
 			c.log.Error(err)
+			return err
+		}
+
+		if id != 0 {
 			wordLearn := &models.WordsLearn{
 				ID:           word.ID,
 				English:      word.English,
@@ -146,9 +162,16 @@ func (c *ServiceLocal) Update() error {
 		}
 
 		if id == 0 {
+			lenWords, err := c.repoWordsPg.GetLenWords(context.TODO())
+			if err != nil {
+				c.log.Error(err)
+				return err
+			}
+
+			word.ID = lenWords + 1
 			err = c.repoWordsPg.InsertWord(context.TODO(), word)
 			if err != nil {
-				log.Println(err)
+				c.log.Error(err)
 				return err
 			}
 		}

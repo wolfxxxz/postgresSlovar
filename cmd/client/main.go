@@ -61,7 +61,7 @@ func main() {
 		logger.Infof("GET WORDS FROM XLSx SUCCESS %+v", len(words))
 
 		repoWords := repositories.NewRepoWordsGorm(db, logger)
-		err = repoWords.InsertWordsLibrary(ctx, words)
+		err = repoWords.InsertWords(ctx, words)
 		if err != nil {
 			logger.Fatal(err)
 		}

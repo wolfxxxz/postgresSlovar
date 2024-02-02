@@ -117,12 +117,16 @@ func (tr *BackUpCopyRepo) GetAllWordsFromBackUpXlsx() ([]*models.Word, error) {
 
 			num, err := strconv.Atoi(row.Cells[0].String())
 			if err != nil {
-				return nil, err
+				appErr := apperrors.GetAllWordsXLSXErr.AppendMessage(err)
+				tr.log.Error(appErr)
+				return nil, appErr
 			}
 
 			rAnsw, err := strconv.Atoi(row.Cells[6].String())
 			if err != nil {
-				return nil, err
+				appErr := apperrors.GetAllWordsXLSXErr.AppendMessage(err)
+				tr.log.Error(appErr)
+				return nil, appErr
 			}
 
 			wordNew = append(wordNew, &models.Word{

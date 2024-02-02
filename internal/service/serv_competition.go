@@ -35,12 +35,6 @@ func (c *ServiceCompetition) WorkTest(num int) error {
 		return err
 	}
 
-	maps, err := c.repoWordsPg.GetWordsMap()
-	if err != nil {
-		c.log.Error(err)
-		return err
-	}
-
 	startTime := time.Now()
 	LearnSlice := []*models.Word{}
 	quantity := len(s)
@@ -58,6 +52,12 @@ func (c *ServiceCompetition) WorkTest(num int) error {
 			not++
 			s = models.Preppend(s, word)
 			continue
+		}
+
+		maps, err := c.repoWordsPg.GetWordsMap(word.Russian)
+		if err != nil {
+			c.log.Error(err)
+			return err
 		}
 
 		y, n, exit := Compare(word, maps)
@@ -156,17 +156,18 @@ func (c *ServiceCompetition) LearnWords(quantity int) error {
 }
 
 func (c *ServiceCompetition) LearnWordsTest(s []*models.Word) bool {
-	maps, err := c.repoWordsPg.GetWordsMap()
-	if err != nil {
-		c.log.Error(err)
-	}
-
 	startTime := time.Now()
 	fmt.Println("                 Learn Words")
 	for {
 		if len(s) == 0 {
 			break
 		}
+
+		maps, err := c.repoWordsPg.GetWordsMap(s[0].Russian)
+		if err != nil {
+			c.log.Error(err)
+		}
+
 		v := s[0]
 		y, _, exit := Compare(v, maps)
 		if exit {

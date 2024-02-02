@@ -21,8 +21,9 @@ type RepoWordsPg interface {
 	GetWordsWhereRA(quantity int) ([]*models.Word, error)
 	UpdateRightAnswer(word *models.Word) error
 	UpdateWord(word *models.Word) error
-	GetWordsMap() (*map[string][]string, error)
-	InsertWordsLibrary(ctx context.Context, library []*models.Word) error
+	GetWordsMap(russian string) (*map[string][]string, error)
+	InsertWords(ctx context.Context, library []*models.Word) error
+	GetLenWords(ctx context.Context) (int, error)
 }
 
 type repoWords struct {
@@ -46,36 +47,48 @@ func (rt *repoWords) GetAllWords() ([]*models.Word, error) {
 	return words, nil
 }
 
+func (rt *repoWords) GetLenWords(ctx context.Context) (int, error) {
+	var count int64
+	err := rt.db.Model(&models.Word{}).Count(&count).Error
+	if err != nil {
+		appErr := apperrors.GetAllWordsErr.AppendMessage(err)
+		rt.log.Error(appErr)
+		return 0, appErr
+	}
+
+	return int(count), nil
+}
+
 func (rt *repoWords) InsertWord(ctx context.Context, word *models.Word) error {
 	if word == nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage("lib == nil")
+		appErr := apperrors.InsertWordErr.AppendMessage("lib == nil")
 		rt.log.Error(appErr)
 		return appErr
 	}
 
 	tx := rt.db.WithContext(ctx)
 	if tx.Error != nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage(tx.Error)
+		appErr := apperrors.InsertWordErr.AppendMessage(tx.Error)
 		rt.log.Error(appErr)
 		return appErr
 	}
 
 	result := tx.Create(word)
 	if result.Error != nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage(result.Error)
-		rt.log.Error(appErr)
+		appErr := apperrors.InsertWordErr.AppendMessage(result.Error, word.English)
+		rt.log.Error(appErr, word.ID)
 		return appErr
 	}
 
 	if result.RowsAffected == 0 {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage("no rows affected")
+		appErr := apperrors.InsertWordErr.AppendMessage("no rows affected")
 		rt.log.Error(appErr)
 		return appErr
 	}
 
 	createdLib := &models.Word{}
 	if err := tx.First(createdLib, "id = ?", word.ID).Error; err != nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage(err)
+		appErr := apperrors.InsertWordErr.AppendMessage(err)
 		rt.log.Error(appErr)
 		return appErr
 	}
@@ -132,9 +145,9 @@ func (rt *repoWords) GetTranslationEnglLike(word string) ([]*models.Word, error)
 	return words, nil
 }
 
-func (rt *repoWords) InsertWordsLibrary(ctx context.Context, library []*models.Word) error {
+func (rt *repoWords) InsertWords(ctx context.Context, library []*models.Word) error {
 	if library == nil {
-		appErr := apperrors.InsertWordsLibraryErr.AppendMessage("library == nil")
+		appErr := apperrors.InsertWordsErr.AppendMessage("library == nil")
 		rt.log.Error(appErr)
 		return appErr
 	}
@@ -201,15 +214,17 @@ func (rt *repoWords) UpdateWord(word *models.Word) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("no rows affected when updating word with ID %d", word.ID)
+		appErr := &apperrors.UpdateWordRowAffectedErr
+		rt.log.Info(appErr)
+		return appErr
 	}
 
 	return nil
 }
 
-func (rt *repoWords) GetWordsMap() (*map[string][]string, error) {
+func (rt *repoWords) GetWordsMap(russian string) (*map[string][]string, error) {
 	var words []*models.Word
-	err := rt.db.Order("russian").Find(&words).Error
+	err := rt.db.Order("russian").Where("russian = ?", russian).Find(&words).Error
 	if err != nil {
 		appErr := apperrors.GetWordsMapErr.AppendMessage(err)
 		rt.log.Error(appErr)
