@@ -168,7 +168,8 @@ func (rt *repoWords) CheckWordByEnglish(word *models.Word) (int, error) {
 		return 0, nil
 	}
 
-	return id, fmt.Errorf("word [%v] already exists in the database", word.English)
+	rt.log.Infof("word [%v] already exists in the database", word.English)
+	return id, nil
 }
 
 func (rt *repoWords) GetWordsWhereRA(quantity int) ([]*models.Word, error) {
